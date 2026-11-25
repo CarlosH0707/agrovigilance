@@ -15,9 +15,9 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 
 **Pronto quando:** o mesmo evento enviado duas vezes gera uma linha na tabela raw e uma mensagem na fila (conferido manualmente até existirem testes de integração), e a lógica tem testes unitários passando.
 
-- [ ] Esqueleto Python 3.14 com `uv`, `pytest` e `src/agrovigilance/`
-- [ ] Instalar Docker Engine e `uv` no WSL
-- [ ] Docker Compose com Postgres 19 + Floci subindo e respondendo
+- [x] Esqueleto Python 3.14 com `uv`, `pytest` e `src/agrovigilance/`
+- [x] Instalar Docker Engine e `uv` no WSL
+- [x] Docker Compose com Postgres 19 + Floci subindo e respondendo
 - [ ] Migrations: schemas `raw`/`core`/`read`, `raw.open_meteo_events`, `raw.field_events`
 - [ ] Filas `agrovigilance-events` e `agrovigilance-events-dlq` (`maxReceiveCount=3`)
 - [ ] `POST /webhooks/field` com idempotência
