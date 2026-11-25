@@ -15,7 +15,7 @@ Instruções para agentes de IA (Claude Code, Codex, etc.) e para quem mais cont
 3. **Siga o roadmap.** Não adiante fases. Se a tarefa exigir algo de uma fase futura, pergunte.
 4. **Nunca commite direto na `main`** (a partir da Fase 1). Cada task tem sua branch `feature/<descricao>` ou `release/<marco>`, criada a partir da `main` atualizada. No fim da task: `git merge --no-ff` na `main` e a branch é apagada. Detalhes em [ADR-0008](docs/decisions/0008-fluxo-de-branches.md).
 5. **Commits pequenos**, mensagem em português no imperativo (`adiciona tabela raw.field_events`). Não faça commit, merge nem push sem o dono pedir.
-6. **Mudança no banco só por migration** em `migrations/<Numero>__DDL__<nome>.sql` (4 dígitos, snake_case). Migration aplicada não se edita: crie outra. Ver [ADR-0009](docs/decisions/0009-migrations-versionadas.md).
+6. **Mudança no banco só por migration** em `migrations/V<NNNN>__<nome>.sql` (padrão do Flyway, 4 dígitos, snake_case), aplicada com `uv run --env-file .env python scripts/migrate.py`. Migration aplicada não se edita: crie outra. Ver [ADR-0009](docs/decisions/0009-migrations-versionadas.md) e [ADR-0013](docs/decisions/0013-migrations-no-padrao-flyway-com-runner-proprio.md).
 7. **Sem segredos no repo.** Configuração via variáveis de ambiente; `.env` fica fora do git.
 
 ## Decisões de projeto
@@ -30,8 +30,9 @@ Toda decisão de arquitetura, stack ou trade-off vira um **ADR** em [`docs/decis
 
 - Python 3.14, pacote em `src/agrovigilance/`, dependências com `uv` ([ADR-0011](docs/decisions/0011-python-uv-e-testes.md)).
 - Nomes de código em inglês; documentação e commits em português.
-- **Toda lógica nova chega com teste unitário** (`pytest`), sem banco nem fila: use fakes atrás de interfaces simples. Testes de integração virão depois. Rode a suíte antes de dizer que algo está pronto.
-- **Teste unitário fica ao lado do módulo**: `foo.py` → `foo_test.py` na mesma pasta. `tests/` é só para config/fixtures compartilhadas e o smoke test ([ADR-0012](docs/decisions/0012-testes-ao-lado-do-codigo.md)).
+- **Toda lógica nova chega com teste unitário** (`pytest`), sem banco nem fila: use fakes atrás de interfaces simples. Rode a suíte antes de dizer que algo está pronto.
+- **O que só o banco garante** (constraints, `ON CONFLICT`, migrations) ganha teste de integração em `tests/integration/` com testcontainers, rodado com `uv run pytest -m integration` ([ADR-0014](docs/decisions/0014-testes-de-integracao-com-testcontainers.md)).
+- **Teste unitário fica ao lado do módulo**: `foo.py` → `foo_test.py` na mesma pasta. `tests/` é só para config/fixtures compartilhadas, o smoke test e `tests/integration/` ([ADR-0012](docs/decisions/0012-testes-ao-lado-do-codigo.md)).
 - Banco organizado nos schemas `raw`, `core` e `read` ([ADR-0010](docs/decisions/0010-schemas-do-banco.md)).
 - Tipagem nos limites (payloads externos, mensagens de fila, saída do LLM) com Pydantic.
 

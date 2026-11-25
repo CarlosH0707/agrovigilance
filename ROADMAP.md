@@ -13,12 +13,13 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 
 ## Fase 1 — Setup e ingestão idempotente
 
-**Pronto quando:** o mesmo evento enviado duas vezes gera uma linha na tabela raw e uma mensagem na fila (conferido manualmente até existirem testes de integração), e a lógica tem testes unitários passando.
+**Pronto quando:** o mesmo evento enviado duas vezes gera uma linha na tabela raw e uma mensagem na fila, e a lógica tem testes unitários passando (e de integração onde só o banco garante, ADR-0014).
 
 - [x] Esqueleto Python 3.14 com `uv`, `pytest` e `src/agrovigilance/`
 - [x] Instalar Docker Engine e `uv` no WSL
 - [x] Docker Compose com Postgres 19 + Floci subindo e respondendo
-- [ ] Migrations: schemas `raw`/`core`/`read`, `raw.open_meteo_events`, `raw.field_events`
+- [x] Migrations: schemas `raw`/`core`/`read`, `raw.open_meteo_events`, `raw.field_events` (runner próprio, ADR-0013)
+- [x] Testes de integração com testcontainers (ADR-0014)
 - [ ] Filas `agrovigilance-events` e `agrovigilance-events-dlq` (`maxReceiveCount=3`)
 - [ ] `POST /webhooks/field` com idempotência
 - [ ] Ingestão Open-Meteo para um talhão fixo
@@ -51,8 +52,7 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 
 ## Depois (sem data)
 
-- Testes de integração contra Postgres e Floci reais
-
+- Testes de integração contra o Floci
 - Outbox transacional
 - Deploy em nuvem com custo mensal medido
 - Mais de um produtor
