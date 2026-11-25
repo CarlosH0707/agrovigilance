@@ -1,6 +1,6 @@
 # Arquitetura
 
-> Estado: **Fase 1 em andamento.** Implementado até aqui: schemas e tabelas raw (migrations V0001–V0003). Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
+> Estado: **Fase 1 em andamento.** Implementado até aqui: schemas e tabelas raw (migrations V0001–V0003), fila + DLQ e `POST /webhooks/field` idempotente. Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
 
 ## Visão geral
 
@@ -34,12 +34,27 @@
 | **Agente LLM** | Redige o alerta a partir do snapshot, com saída estruturada (Pydantic) e evals | 3 |
 | **Canal** | Adaptador de saída: `ConsoleChannel` primeiro, `WhatsAppChannel` depois | 3–4 |
 
+## Organização do código
+
+Camadas dentro de `src/agrovigilance/` ([ADR-0017](docs/decisions/0017-camadas-dentro-do-pacote.md)):
+
+```
+domain/          regras puras (FieldEvent, idempotency_key)
+application/     casos de uso + portas (ingest_field_event: EventStore, Publisher)
+infrastructure/  adaptadores
+  database/      connection.py + <schema>/<tabela>/{repository.py, queries/*.sql}
+  queues/        <fila>/publisher.py
+entrypoints/     API FastAPI (api.py); depois worker e poller
+```
+
 ## Fluxo de ingestão (Fase 1)
 
 1. A fonte chega (poll ou webhook) e calculamos a `idempotency_key`.
 2. `INSERT INTO raw.<fonte>_events ... ON CONFLICT (idempotency_key) DO NOTHING RETURNING id`.
 3. Sem `id` de volta → duplicata: responde OK e **não** publica nada.
 4. Com `id` → depois do commit, publica uma mensagem fina na fila (`source` + `event_id` + metadados, sem o payload).
+
+`POST /webhooks/field` ([ADR-0016](docs/decisions/0016-fastapi-para-a-api-http.md)) exige `tenant_id`, `field_id`, `type` (texto livre na Fase 1) e `occurred_at` com fuso; `source_event_id` é opcional e campos extras são guardados no payload. Responde **202** (novo, com `event_id`), **200** (`duplicate`) ou **422** (inválido).
 
 Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR-0003](docs/decisions/0003-sqs-standard-com-dlq.md), [ADR-0004](docs/decisions/0004-publicar-apos-commit-sem-outbox.md), [ADR-0010](docs/decisions/0010-schemas-do-banco.md).
 

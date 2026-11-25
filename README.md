@@ -16,7 +16,7 @@ Quem toca uma lavoura olha dez telas diferentes para decidir se dá para pulveri
 
 ## Estado atual
 
-✅ **Fase 0 (documentação) concluída.** 🚧 **Fase 1** em andamento: setup, migrations e filas prontos (Python + Postgres 19 + Floci, schemas, tabelas raw, fila + DLQ); falta a ingestão idempotente. Veja o [ROADMAP](ROADMAP.md).
+✅ **Fase 0 (documentação) concluída.** 🚧 **Fase 1** em andamento: setup, migrations e filas prontos (Python + Postgres 19 + Floci, schemas, tabelas raw, fila + DLQ); webhook `POST /webhooks/field` idempotente pronto; falta a ingestão Open-Meteo. Veja o [ROADMAP](ROADMAP.md).
 
 ## Documentação
 
@@ -40,6 +40,7 @@ cp .env.example .env        # ajuste se quiser; o .env fica fora do git
 docker compose up -d --wait # Postgres 19 (porta 5432) e Floci/SQS (porta 4566)
 uv run --env-file .env python scripts/migrate.py  # aplica as migrations pendentes
 uv run --env-file .env python scripts/create_queues.py  # cria fila + DLQ (o Floci não guarda: rode após cada up)
+uv run --env-file .env uvicorn agrovigilance.entrypoints.api:app  # API em http://localhost:8000 (/docs)
 uv run pytest                  # testes unitários (não precisam do Docker)
 uv run pytest -m integration   # testes de integração (sobem Postgres e Floci descartáveis via testcontainers)
 ```

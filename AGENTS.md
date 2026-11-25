@@ -29,6 +29,7 @@ Toda decisão de arquitetura, stack ou trade-off vira um **ADR** em [`docs/decis
 ## Convenções de código (a partir da Fase 1)
 
 - Python 3.14, pacote em `src/agrovigilance/`, dependências com `uv` ([ADR-0011](docs/decisions/0011-python-uv-e-testes.md)).
+- **Camadas** ([ADR-0017](docs/decisions/0017-camadas-dentro-do-pacote.md)): `domain/` (regras puras, sem IO), `application/` (casos de uso + portas `Protocol`), `infrastructure/` (`database/<schema>/<tabela>/` com `repository.py` e `queries/` com um `.sql` por query; `queues/<fila>/publisher.py`), `entrypoints/` (API, depois worker/poller). `domain` não importa outras camadas; o pacote nunca importa de `scripts/`.
 - Nomes de código em inglês; documentação e commits em português.
 - **Toda lógica nova chega com teste unitário** (`pytest`), sem banco nem fila: use fakes atrás de interfaces simples. Rode a suíte antes de dizer que algo está pronto.
 - **O que só o banco garante** (constraints, `ON CONFLICT`, migrations) ganha teste de integração em `tests/integration/` com testcontainers, rodado com `uv run pytest -m integration` ([ADR-0014](docs/decisions/0014-testes-de-integracao-com-testcontainers.md)).
