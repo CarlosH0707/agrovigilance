@@ -16,7 +16,7 @@ Quem toca uma lavoura olha dez telas diferentes para decidir se dá para pulveri
 
 ## Estado atual
 
-✅ **Fase 0 (documentação) concluída.** 🚧 **Fase 1** em andamento: setup, migrations e filas prontos (Python + Postgres 19 + Floci, schemas, tabelas raw, fila + DLQ); webhook `POST /webhooks/field` e poller da Open-Meteo idempotentes prontos; falta a conferência manual do webhook. Veja o [ROADMAP](ROADMAP.md).
+✅ **Fases 0 e 1 concluídas**: documentação, setup (Python + Postgres 19 + Floci), migrations, fila + DLQ, webhook `POST /webhooks/field` e poller da Open-Meteo idempotentes, conferidos manualmente. Próxima: **Fase 2** (worker e read model). Veja o [ROADMAP](ROADMAP.md).
 
 ## Documentação
 
