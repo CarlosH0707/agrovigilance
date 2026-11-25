@@ -1,6 +1,6 @@
 # Arquitetura
 
-> Estado: **Fase 2 em andamento.** Fase 1 concluída (raw, fila + DLQ, webhook e poller idempotentes). Na Fase 2: formato canônico em `core` (migrations V0004–V0005, ADR-0019) e worker em loop com long polling (ADR-0021); o `field_snapshot` vem a seguir. Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
+> Estado: **Fase 2 em andamento.** Fase 1 concluída (raw, fila + DLQ, webhook e poller idempotentes). Na Fase 2: formato canônico em `core` (migrations V0004–V0005, ADR-0019), worker em loop com long polling (ADR-0021) e `read.field_snapshot` recalculado por talhão (V0006, ADR-0022); falta o teste de DLQ e redrive. Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
 
 ## Visão geral
 
@@ -44,7 +44,7 @@ Camadas dentro de `src/agrovigilance/` ([ADR-0017](docs/decisions/0017-camadas-d
 ```
 domain/          regras puras (FieldEvent, WeatherReading, idempotency_key; canônicos WeatherForecast e FieldOperation; RawEvent)
 application/     casos de uso + portas (ingest_field_event: EventStore, Publisher; ingest_weather: WeatherStore;
-                 process_event: RawEvents, CanonicalStore)
+                 process_event: RawEvents, CanonicalStore, Snapshot)
 infrastructure/  adaptadores
   database/      connection.py + <schema>/<tabela>/{repository.py, queries/*.sql}
   queues/        <fila>/publisher.py e consumer.py
@@ -79,8 +79,9 @@ O worker ([ADR-0021](docs/decisions/0021-worker-em-loop-com-long-polling.md)) ro
 1. Long polling na fila (até 10 mensagens, espera de até 20 s).
 2. Valida a mensagem (`source` + `event_id`) e lê a linha do raw.
 3. Converte para o formato canônico e grava em `core` com `ON CONFLICT (raw_event_id) DO NOTHING`.
-4. Marca o raw como `processed` (ou `rejected`, se o apontamento for inválido) e **só então** apaga a mensagem.
-5. Erro inesperado: não apaga. A mensagem volta após o visibility timeout e, no 3º recebimento, vai para a DLQ.
+4. Recalcula a linha do talhão em `read.field_snapshot` a partir de `core` ([ADR-0022](docs/decisions/0022-field-snapshot-recalculado-por-talhao.md)).
+5. Marca o raw como `processed` (ou `rejected`, se o apontamento for inválido) e **só então** apaga a mensagem.
+6. Erro inesperado: não apaga. A mensagem volta após o visibility timeout e, no 3º recebimento, vai para a DLQ.
 
 ## Modelo de dados
 
@@ -119,7 +120,14 @@ Formato interno por tipo de evento, com colunas tipadas ([ADR-0019](docs/decisio
 
 ### `read.field_snapshot` (Fase 2)
 
-Uma linha por talhão com o último estado consolidado (clima recente, próximas horas, operações agendadas). Esquema a definir em ADR próprio.
+Uma linha por `(tenant_id, field_id)` com o último estado consolidado ([ADR-0022](docs/decisions/0022-field-snapshot-recalculado-por-talhao.md)). A cada mensagem processada, o worker recalcula a linha do talhão inteira a partir de `core` (`INSERT ... SELECT ... ON CONFLICT DO UPDATE`), então ordem de chegada e reentrega não mudam o resultado.
+
+| Coluna | Tipo | Notas |
+|---|---|---|
+| `forecast` | JSONB | próximas horas, ordenadas; por hora, a coleta de maior `fetched_at` |
+| `scheduled_spraying_for` | timestamptz | último agendamento sem conclusão apontada depois dele |
+| `last_operation_type`, `last_operation_at` | text, timestamptz | apontamento mais recente |
+| `updated_at` | timestamptz | último refresh |
 
 ## Domínio: regras do MVP
 

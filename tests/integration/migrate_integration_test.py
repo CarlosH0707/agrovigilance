@@ -13,6 +13,7 @@ ALL = [
     "V0003__create_raw_field_events.sql",
     "V0004__create_core_weather_forecasts.sql",
     "V0005__create_core_field_operations.sql",
+    "V0006__create_read_field_snapshot.sql",
 ]
 
 
@@ -34,6 +35,7 @@ def test_applies_everything_once(db):
         "raw.field_events",
         "core.weather_forecasts",
         "core.field_operations",
+        "read.field_snapshot",
     } <= tables
 
 

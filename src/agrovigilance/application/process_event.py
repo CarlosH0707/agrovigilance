@@ -1,7 +1,8 @@
 """Caso de uso do worker: raw → canônico em core, uma mensagem por vez (ADR-0019, ADR-0021).
 
 Idempotente sem transação entre tabelas: se cair entre gravar o core e marcar o raw,
-a mensagem volta, o INSERT no core não duplica (UNIQUE raw_event_id) e o status é marcado.
+a mensagem volta, o INSERT no core não duplica (UNIQUE raw_event_id), o snapshot é
+recalculado de novo (ADR-0022) e o status é marcado.
 """
 
 from collections.abc import Callable, Mapping
@@ -31,6 +32,11 @@ class CanonicalStore[T](Protocol):
         """Grava uma vez por `raw_event_id`; repetir não faz nada."""
 
 
+class Snapshot(Protocol):
+    def refresh(self, tenant_id: str, field_id: str) -> None:
+        """Recalcula o read model do talhão a partir de core; repetir dá o mesmo resultado."""
+
+
 Handler = Callable[[UUID], str]
 
 
@@ -49,19 +55,26 @@ def _load(raw: RawEvents, event_id: UUID) -> RawEvent:
 
 
 def process_weather(
-    event_id: UUID, raw: RawEvents, core: CanonicalStore[weather_forecast.WeatherForecast]
+    event_id: UUID,
+    raw: RawEvents,
+    core: CanonicalStore[weather_forecast.WeatherForecast],
+    snapshot: Snapshot,
 ) -> str:
     row = _load(raw, event_id)
     # Unidade ou fuso errado levanta ValueError: é bug na ingestão, então vai para a DLQ.
     core.insert(
         weather_forecast.from_raw(row.id, row.tenant_id, row.field_id, row.ingested_at, row.payload)
     )
+    snapshot.refresh(row.tenant_id, row.field_id)
     raw.set_status(event_id, "processed")
     return "processed"
 
 
 def process_field_operation(
-    event_id: UUID, raw: RawEvents, core: CanonicalStore[field_operation.FieldOperation]
+    event_id: UUID,
+    raw: RawEvents,
+    core: CanonicalStore[field_operation.FieldOperation],
+    snapshot: Snapshot,
 ) -> str:
     row = _load(raw, event_id)
     try:
@@ -73,5 +86,6 @@ def process_field_operation(
         raw.set_status(event_id, "rejected")
         return "rejected"
     core.insert(op)
+    snapshot.refresh(row.tenant_id, row.field_id)
     raw.set_status(event_id, "processed")
     return "processed"

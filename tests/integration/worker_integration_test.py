@@ -1,4 +1,4 @@
-"""Worker de ponta a ponta: raw → fila → core, com reentrega e evento inválido (ADR-0021)."""
+"""Worker de ponta a ponta: raw → fila → core → snapshot, com reentrega e evento inválido (ADR-0021)."""
 
 import json
 import uuid
@@ -100,6 +100,9 @@ def test_worker_fills_core_and_marks_raw(db, sqs, queue_url):
                 " UNION ALL SELECT id, status FROM raw.open_meteo_events"
             ).fetchall()
         )
+        snapshot = conn.execute(
+            "SELECT tenant_id, field_id, scheduled_spraying_for FROM read.field_snapshot"
+        ).fetchall()
 
     assert forecast == [(weather_id, 7.2)]
     assert operations == [
@@ -110,5 +113,6 @@ def test_worker_fills_core_and_marks_raw(db, sqs, queue_url):
         scheduled_id: "processed",
         rejected_id: "rejected",
     }
+    assert snapshot == [("t1", "f1", datetime(2026, 11, 26, 10, tzinfo=UTC))]
     leftover = sqs.receive_message(QueueUrl=queue_url, WaitTimeSeconds=1).get("Messages", [])
     assert [json.loads(m["Body"]) for m in leftover] == []
