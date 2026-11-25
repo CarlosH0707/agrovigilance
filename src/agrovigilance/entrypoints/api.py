@@ -4,7 +4,7 @@ Uso: uv run --env-file .env uvicorn agrovigilance.entrypoints.api:app
 """
 
 from functools import cache
-from typing import Any
+from typing import Annotated, Any
 
 import boto3
 import psycopg
@@ -35,9 +35,9 @@ def get_publisher() -> Publisher:
 @app.post("/webhooks/field", status_code=status.HTTP_202_ACCEPTED)
 def receive_field_event(
     response: Response,
-    payload: dict[str, Any] = Body(...),
-    store: EventStore = Depends(get_store),
-    publisher: Publisher = Depends(get_publisher),
+    payload: Annotated[dict[str, Any], Body()],
+    store: Annotated[EventStore, Depends(get_store)],
+    publisher: Annotated[Publisher, Depends(get_publisher)],
 ):
     # Valida aqui (e não na assinatura) para gravar o corpo exatamente como chegou.
     try:

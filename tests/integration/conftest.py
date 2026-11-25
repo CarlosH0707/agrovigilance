@@ -30,7 +30,11 @@ def db(pg_server):
         admin.execute(f'DROP DATABASE "{name}" WITH (FORCE)')
 
 
-FAKE_AWS = {"region_name": "sa-east-1", "aws_access_key_id": "test", "aws_secret_access_key": "test"}
+FAKE_AWS = {
+    "region_name": "sa-east-1",
+    "aws_access_key_id": "test",
+    "aws_secret_access_key": "test",
+}
 
 
 @pytest.fixture(scope="session")
@@ -53,7 +57,7 @@ def _wait_until_up(client, timeout=30.0):
         try:
             client.list_queues()
             return
-        except (BotoCoreError, ClientError):
+        except BotoCoreError, ClientError:
             if time.monotonic() > deadline:
                 raise
             time.sleep(0.5)

@@ -17,9 +17,9 @@ MAX_RECEIVE_COUNT = 3
 def ensure_queues(sqs, queue_name: str = QUEUE_NAME, dlq_name: str = DLQ_NAME) -> str:
     """Cria a DLQ e a fila principal com redrive para ela; devolve a URL da principal."""
     dlq_url = sqs.create_queue(QueueName=dlq_name)["QueueUrl"]
-    dlq_arn = sqs.get_queue_attributes(QueueUrl=dlq_url, AttributeNames=["QueueArn"])[
-        "Attributes"
-    ]["QueueArn"]
+    dlq_arn = sqs.get_queue_attributes(QueueUrl=dlq_url, AttributeNames=["QueueArn"])["Attributes"][
+        "QueueArn"
+    ]
     redrive = {"deadLetterTargetArn": dlq_arn, "maxReceiveCount": str(MAX_RECEIVE_COUNT)}
     return sqs.create_queue(
         QueueName=queue_name, Attributes={"RedrivePolicy": json.dumps(redrive)}

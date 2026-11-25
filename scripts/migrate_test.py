@@ -16,7 +16,12 @@ def test_discover_orders_by_version(tmp_path):
 
 @pytest.mark.parametrize(
     "name",
-    ["0001__DDL__old_style.sql", "V1__short.sql", "V0001__CamelCase.sql", "V0001_one_underscore.sql"],
+    [
+        "0001__DDL__old_style.sql",
+        "V1__short.sql",
+        "V0001__CamelCase.sql",
+        "V0001_one_underscore.sql",
+    ],
 )
 def test_discover_rejects_bad_names(tmp_path, name):
     write(tmp_path, name)

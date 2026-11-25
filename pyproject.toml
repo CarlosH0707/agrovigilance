@@ -34,3 +34,6 @@ dev = [
     "pytest>=9.2.0",
     "testcontainers[postgres]>=4.15.0",
 ]
+
+[tool.ruff]
+line-length = 100  # o estilo que o código já seguia
