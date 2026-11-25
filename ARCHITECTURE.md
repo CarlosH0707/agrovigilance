@@ -1,6 +1,6 @@
 # Arquitetura
 
-> Estado: **Fase 2 em andamento.** Fase 1 concluída (raw, fila + DLQ, webhook e poller idempotentes). Na Fase 2: formato canônico em `core` (migrations V0004–V0005, ADR-0019), worker em loop com long polling (ADR-0021) e `read.field_snapshot` recalculado por talhão (V0006, ADR-0022); falta o teste de DLQ e redrive. Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
+> Estado: **Fase 2 concluída.** Fase 1 concluída (raw, fila + DLQ, webhook e poller idempotentes). Na Fase 2: formato canônico em `core` (migrations V0004–V0005, ADR-0019), worker em loop com long polling (ADR-0021) e `read.field_snapshot` recalculado por talhão (V0006, ADR-0022); DLQ e redrive testados de ponta a ponta (ADR-0023). Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
 
 ## Visão geral
 
@@ -81,7 +81,8 @@ O worker ([ADR-0021](docs/decisions/0021-worker-em-loop-com-long-polling.md)) ro
 3. Converte para o formato canônico e grava em `core` com `ON CONFLICT (raw_event_id) DO NOTHING`.
 4. Recalcula a linha do talhão em `read.field_snapshot` a partir de `core` ([ADR-0022](docs/decisions/0022-field-snapshot-recalculado-por-talhao.md)).
 5. Marca o raw como `processed` (ou `rejected`, se o apontamento for inválido) e **só então** apaga a mensagem.
-6. Erro inesperado: não apaga. A mensagem volta após o visibility timeout e, no 3º recebimento, vai para a DLQ.
+6. Erro inesperado: não apaga. A mensagem volta após o visibility timeout e, no 3º recebimento, vai para a DLQ. Se o erro for de infraestrutura (banco fora), o worker registra, espera 5 s e segue.
+7. Corrigida a causa, `uv run --env-file .env python scripts/redrive_dlq.py` devolve as mensagens da DLQ para a fila de origem ([ADR-0023](docs/decisions/0023-redrive-nativo-da-dlq.md)).
 
 ## Modelo de dados
 
