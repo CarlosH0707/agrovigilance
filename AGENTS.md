@@ -31,6 +31,7 @@ Toda decisão de arquitetura, stack ou trade-off vira um **ADR** em [`docs/decis
 - Python 3.14, pacote em `src/agrovigilance/`, dependências com `uv` ([ADR-0011](docs/decisions/0011-python-uv-e-testes.md)).
 - Nomes de código em inglês; documentação e commits em português.
 - **Toda lógica nova chega com teste unitário** (`pytest`), sem banco nem fila: use fakes atrás de interfaces simples. Testes de integração virão depois. Rode a suíte antes de dizer que algo está pronto.
+- **Teste unitário fica ao lado do módulo**: `foo.py` → `foo_test.py` na mesma pasta. `tests/` é só para config/fixtures compartilhadas e o smoke test ([ADR-0012](docs/decisions/0012-testes-ao-lado-do-codigo.md)).
 - Banco organizado nos schemas `raw`, `core` e `read` ([ADR-0010](docs/decisions/0010-schemas-do-banco.md)).
 - Tipagem nos limites (payloads externos, mensagens de fila, saída do LLM) com Pydantic.
 

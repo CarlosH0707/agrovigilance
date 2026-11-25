@@ -16,7 +16,7 @@ Quem toca uma lavoura olha dez telas diferentes para decidir se dá para pulveri
 
 ## Estado atual
 
-✅ **Fase 0 (documentação) concluída.** Próximo: Fase 1, setup e ingestão idempotente. Veja o [ROADMAP](ROADMAP.md).
+✅ **Fase 0 (documentação) concluída.** 🚧 **Fase 1** em andamento: setup pronto (Python + Postgres 19 + Floci); falta a ingestão idempotente. Veja o [ROADMAP](ROADMAP.md).
 
 ## Documentação
 
@@ -33,4 +33,14 @@ Python 3.14 · `uv` · `pytest` · FastAPI · PostgreSQL 19 · SQS (Floci em dev
 
 ## Como rodar
 
-Ainda não há o que rodar. Esta seção será preenchida na Fase 1 (setup).
+Pré-requisitos: Docker Engine com Compose e [`uv`](https://docs.astral.sh/uv/).
+
+```bash
+cp .env.example .env        # ajuste se quiser; o .env fica fora do git
+docker compose up -d --wait # Postgres 19 (porta 5432) e Floci/SQS (porta 4566)
+uv run pytest               # testes unitários (não precisam do Docker)
+```
+
+Testes unitários ficam ao lado do módulo que testam (`foo.py` → `foo_test.py`); `tests/` guarda só config compartilhada e o smoke test ([ADR-0012](docs/decisions/0012-testes-ao-lado-do-codigo.md)).
+
+Para parar: `docker compose down` (os dados do Postgres ficam no volume `pgdata`; `down -v` apaga).

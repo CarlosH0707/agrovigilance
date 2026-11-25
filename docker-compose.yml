@@ -1,0 +1,26 @@
+# Ambiente local (ADR-0006): Postgres 19 + Floci (SQS).
+services:
+  postgres:
+    image: postgres:19.0
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # Desde a 18, a imagem guarda os dados em /var/lib/postgresql/<versão>/docker.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  floci:
+    image: floci/floci:2.5.0
+    ports:
+      - "4566:4566"
+
+volumes:
+  pgdata:
