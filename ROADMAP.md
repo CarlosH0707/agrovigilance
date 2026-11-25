@@ -5,7 +5,7 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 ## Fase 0 — Documentação ✅ em andamento
 
 - [x] README, AGENTS, ARCHITECTURE, ROADMAP
-- [x] ADRs iniciais (0001–0007)
+- [x] ADRs iniciais (0001–0008)
 - [ ] Confirmar a versão estável atual do PostgreSQL
 - [ ] Confirmar se o emulador AWS escolhido suporta DLQ e redrive (ver ADR-0006)
 

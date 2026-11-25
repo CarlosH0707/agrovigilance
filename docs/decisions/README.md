@@ -13,6 +13,7 @@ Status possíveis: `proposta` · `aceita` · `substituída por ADR-NNNN` · `des
 | [0005](0005-canal-de-notificacao-como-adaptador.md) | Canal de notificação como adaptador (Console → WhatsApp) | aceita |
 | [0006](0006-stack-e-ambiente-local.md) | Stack e ambiente local | proposta |
 | [0007](0007-harness-deterministico-antes-do-llm.md) | Harness determinístico antes do LLM | aceita |
+| [0008](0008-fluxo-de-branches.md) | Fluxo de branches: nada de commit direto na `main` | aceita |
 
 ## Template
 

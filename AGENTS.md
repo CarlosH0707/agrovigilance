@@ -13,8 +13,9 @@ Instruções para agentes de IA (Claude Code, Codex, etc.) e para quem mais cont
 1. **Faça o mínimo que resolve a tarefa.** Nada de abstração "para o futuro", dependência nova sem motivo ou camada extra. Biblioteca padrão e recursos nativos primeiro.
 2. **Não corte segurança, validação nem testes** da lógica arriscada (idempotência, deduplicação, anti-spam, parsing de payload externo).
 3. **Siga o roadmap.** Não adiante fases. Se a tarefa exigir algo de uma fase futura, pergunte.
-4. **Commits pequenos**, mensagem em português no imperativo (`adiciona tabela raw_events`). Não faça commit nem push sem o dono pedir.
-5. **Sem segredos no repo.** Configuração via variáveis de ambiente; `.env` fica fora do git.
+4. **Nunca commite direto na `main`** (a partir da Fase 1). Cada task tem sua branch `feature/<descricao>` ou `release/<marco>`, criada a partir da `main` atualizada. No fim da task: `git merge --no-ff` na `main` e a branch é apagada. Detalhes em [ADR-0008](docs/decisions/0008-fluxo-de-branches.md).
+5. **Commits pequenos**, mensagem em português no imperativo (`adiciona tabela raw_events`). Não faça commit, merge nem push sem o dono pedir.
+6. **Sem segredos no repo.** Configuração via variáveis de ambiente; `.env` fica fora do git.
 
 ## Decisões de projeto
 
