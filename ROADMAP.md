@@ -20,7 +20,7 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 - [x] Docker Compose com Postgres 19 + Floci subindo e respondendo
 - [x] Migrations: schemas `raw`/`core`/`read`, `raw.open_meteo_events`, `raw.field_events` (runner próprio, ADR-0013)
 - [x] Testes de integração com testcontainers (ADR-0014)
-- [ ] Filas `agrovigilance-events` e `agrovigilance-events-dlq` (`maxReceiveCount=3`)
+- [x] Filas `agrovigilance-events` e `agrovigilance-events-dlq` (`maxReceiveCount=3`), com teste de integração contra o Floci (ADR-0015)
 - [ ] `POST /webhooks/field` com idempotência
 - [ ] Ingestão Open-Meteo para um talhão fixo
 - [ ] Testes unitários das chaves de idempotência e do fluxo de ingestão (com fakes)
@@ -52,7 +52,6 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 
 ## Depois (sem data)
 
-- Testes de integração contra o Floci
 - Outbox transacional
 - Deploy em nuvem com custo mensal medido
 - Mais de um produtor
