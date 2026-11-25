@@ -2,24 +2,28 @@
 
 Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma fase só começa quando a anterior cumpre o critério de pronto.
 
-## Fase 0 — Documentação ✅ em andamento
+## Fase 0 — Documentação ✅ concluída
 
 - [x] README, AGENTS, ARCHITECTURE, ROADMAP
-- [x] ADRs iniciais (0001–0008)
-- [ ] Confirmar a versão estável atual do PostgreSQL
-- [ ] Confirmar se o emulador AWS escolhido suporta DLQ e redrive (ver ADR-0006)
+- [x] ADRs iniciais (0001–0011)
+- [x] Confirmar a versão do PostgreSQL (19) e o suporte do Floci a DLQ/redrive (ADR-0006)
+- [x] Padrão de migrations (ADR-0009)
+- [x] Schemas do banco e nomes das tabelas raw (ADR-0010)
+- [x] Python 3.14, `uv` e `pytest` (ADR-0011)
 
 ## Fase 1 — Setup e ingestão idempotente
 
-**Pronto quando:** o mesmo evento enviado duas vezes gera uma linha em `raw_events` e uma mensagem na fila.
+**Pronto quando:** o mesmo evento enviado duas vezes gera uma linha na tabela raw e uma mensagem na fila (conferido manualmente até existirem testes de integração), e a lógica tem testes unitários passando.
 
-- [ ] Esqueleto Python com `uv`, `pytest` e `src/agrovigilance/`
-- [ ] Docker Compose com Postgres + emulador de SQS subindo e respondendo
-- [ ] Migration de `raw_events`
+- [ ] Esqueleto Python 3.14 com `uv`, `pytest` e `src/agrovigilance/`
+- [ ] Instalar Docker Engine e `uv` no WSL
+- [ ] Docker Compose com Postgres 19 + Floci subindo e respondendo
+- [ ] Migrations: schemas `raw`/`core`/`read`, `raw.open_meteo_events`, `raw.field_events`
 - [ ] Filas `agrovigilance-events` e `agrovigilance-events-dlq` (`maxReceiveCount=3`)
 - [ ] `POST /webhooks/field` com idempotência
 - [ ] Ingestão Open-Meteo para um talhão fixo
-- [ ] Teste de envio duplicado (webhook e Open-Meteo)
+- [ ] Testes unitários das chaves de idempotência e do fluxo de ingestão (com fakes)
+- [ ] Conferência manual do envio duplicado (webhook e Open-Meteo)
 
 ## Fase 2 — Processamento e read model
 
@@ -46,6 +50,8 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 - [ ] Risco de colheita/tráfego no talhão
 
 ## Depois (sem data)
+
+- Testes de integração contra Postgres e Floci reais
 
 - Outbox transacional
 - Deploy em nuvem com custo mensal medido

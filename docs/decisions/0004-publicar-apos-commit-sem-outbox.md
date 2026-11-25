@@ -7,7 +7,7 @@
 Gravar no banco e publicar na fila são duas operações sem transação comum (dual write). Se o processo cair entre as duas, o evento fica gravado mas nunca é processado.
 
 ## Decisão
-No MVP, publicar logo depois do commit. A coluna `status` em `raw_events` permite achar eventos que ficaram sem publicar. Outbox transacional fica como evolução planejada.
+No MVP, publicar logo depois do commit. A coluna `status` nas tabelas do schema `raw` ([ADR-0010](0010-schemas-do-banco.md)) permite achar eventos que ficaram sem publicar. Outbox transacional fica como evolução planejada.
 
 ## Consequências
 - Implementação simples para a Fase 1.

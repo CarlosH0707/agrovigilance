@@ -2,6 +2,7 @@
 
 - **Status:** aceita
 - **Data:** 2026-11-24
+- **Nota:** a tabela única `raw_events` foi substituída por uma tabela por fonte no schema `raw` ([ADR-0010](0010-schemas-do-banco.md)). A lógica abaixo vale para cada uma.
 
 ## Contexto
 Webhooks são reenviados, polls se sobrepõem e a fila entrega pelo menos uma vez. Sem idempotência, o mesmo evento vira alertas duplicados para o produtor.

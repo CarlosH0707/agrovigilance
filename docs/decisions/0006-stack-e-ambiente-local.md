@@ -1,21 +1,29 @@
-# 0006. Stack e ambiente local
+# 0006. Infraestrutura local: Postgres 19 e Floci no Docker do WSL
 
-- **Status:** proposta (pendências abaixo)
+- **Status:** aceita
 - **Data:** 2026-11-24
 
 ## Contexto
-O ambiente local precisa subir com um comando e imitar os serviços AWS usados (SQS) sem custo.
+O ambiente local precisa subir com um comando, imitar a AWS (SQS) sem custo e usar o mesmo banco que a produção usará.
 
-## Decisão (proposta)
-- Python 3.12+ com `uv`; FastAPI para o webhook; `pytest`.
-- PostgreSQL na versão estável mais recente, via Docker Compose.
-- Emulador de SQS local via Docker Compose. Candidato: **Floci** (sugerido como substituto do LocalStack Community).
+## Decisão
+- **PostgreSQL 19** (estável desde 19/11/2026), com a tag da imagem fixada em `postgres:19.x`, nunca `latest`.
+- **Floci** como emulador de SQS. Suporta DLQ e redrive pela API da AWS (`StartMessageMoveTask`/`ListMessageMoveTasks`).
+- Os dois sobem pelo mesmo `docker-compose.yml`, rodando no **Docker Engine instalado no próprio WSL** (não Docker Desktop).
+- Dados do Postgres em **volume nomeado** do Docker (no disco do Linux, nunca em `/mnt/c`). Eles sobrevivem a recriar o container e só somem com `docker compose down -v`.
+- **Produção:** fica para a fase de deploy. Opções na mesa: Postgres gerenciado (Neon, Supabase, RDS) ou VPS com o mesmo compose.
 
-## Pendências antes de aceitar
-- [ ] Confirmar a versão estável atual do PostgreSQL (a sugestão de usar 18/19 veio do Gemini e não foi verificada).
-- [ ] Confirmar a situação do LocalStack Community e se o Floci suporta DLQ e redrive. Se não suportar, avaliar alternativas (ex.: ElasticMQ).
-- [ ] Instalar `uv` e Docker no WSL (hoje nenhum dos dois está instalado).
+Versão do Python e ferramentas de Python ficam em um ADR separado.
 
 ## Consequências
-- Tudo roda local, sem conta AWS na fase de desenvolvimento.
-- Paridade com a AWS depende do emulador; testes de DLQ precisam rodar contra ele.
+- Mesmo banco em desenvolvimento e produção: sem surpresas de SQL ou concorrência.
+- O Postgres 19 tem `ON CONFLICT DO SELECT`, útil para a ingestão idempotente.
+- A 19 é muito nova: alguns serviços gerenciados podem ainda não oferecê-la quando chegar a hora do deploy.
+- Paridade com a AWS depende do Floci; os testes de DLQ rodam contra ele.
+
+## Alternativas consideradas
+- **LocalStack:** a Community Edition foi descontinuada em 23/03/2026; agora exige conta e token, e o plano gratuito é só para uso não comercial.
+- **ElasticMQ:** só SQS, maduro. Fica como plano B se o Floci falhar.
+- **SQLite em dev:** sem JSONB/GIN e sem escrita concorrente; divergiria da produção.
+- **Docker Desktop:** funciona, mas é mais pesado e não traz nada que o projeto precise.
+- **Banco gerenciado já em dev:** depende de internet e de limites do plano gratuito, e o Floci precisaria de Docker de qualquer forma.

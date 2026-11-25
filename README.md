@@ -16,7 +16,7 @@ Quem toca uma lavoura olha dez telas diferentes para decidir se dá para pulveri
 
 ## Estado atual
 
-🟡 **Fase 0: documentação.** Ainda não há código. Veja o [ROADMAP](ROADMAP.md).
+✅ **Fase 0 (documentação) concluída.** Próximo: Fase 1, setup e ingestão idempotente. Veja o [ROADMAP](ROADMAP.md).
 
 ## Documentação
 
@@ -29,7 +29,7 @@ Quem toca uma lavoura olha dez telas diferentes para decidir se dá para pulveri
 
 ## Stack prevista
 
-Python 3.12+ · `uv` · FastAPI · PostgreSQL · SQS (emulado localmente) · Docker Compose. Detalhes e pendências em [ADR-0006](docs/decisions/0006-stack-e-ambiente-local.md).
+Python 3.14 · `uv` · `pytest` · FastAPI · PostgreSQL 19 · SQS (Floci em dev) · Docker Compose. Detalhes em [ADR-0006](docs/decisions/0006-stack-e-ambiente-local.md) e [ADR-0011](docs/decisions/0011-python-uv-e-testes.md).
 
 ## Como rodar
 

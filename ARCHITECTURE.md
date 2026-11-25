@@ -1,17 +1,17 @@
 # Arquitetura
 
-> Estado: **proposta** (Fase 0). Nada aqui está implementado ainda. Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
+> Estado: **desenho aprovado** (fim da Fase 0). Nada aqui está implementado ainda. Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
 
 ## Visão geral
 
 ```
  Open-Meteo ──(poll)──┐
-                      ├─► Ingestão ─► raw_events (Postgres, idempotente)
+                      ├─► Ingestão ─► raw.<fonte>_events (Postgres, idempotente)
  Webhook de campo ────┘        │
                                └─(após commit)─► fila agrovigilance-events ─► Workers
                                                          │ falha 3x                │
                                                          ▼                         ▼
-                                                 agrovigilance-events-dlq   field_snapshot (read model)
+                                                 agrovigilance-events-dlq   read.field_snapshot
                                                                                    │
                                                                                    ▼
                                                             Harness (regras + anti-spam) ─► LLM (opcional)
@@ -24,12 +24,12 @@
 
 | Componente | Responsabilidade | Fase |
 |---|---|---|
-| **Ingestão Open-Meteo** | Busca previsão horária por talhão e grava em `raw_events` | 1 |
-| **API de webhook** (`POST /webhooks/field`) | Recebe apontamentos de campo e grava em `raw_events` | 1 |
-| **`raw_events`** | Log bruto e imutável de tudo que entrou, com chave de idempotência | 1 |
+| **Ingestão Open-Meteo** | Busca previsão horária por talhão e grava em `raw.open_meteo_events` | 1 |
+| **API de webhook** (`POST /webhooks/field`) | Recebe apontamentos de campo e grava em `raw.field_events` | 1 |
+| **Schema `raw`** | Log bruto e imutável de tudo que entrou, uma tabela por fonte, com chave de idempotência | 1 |
 | **Fila + DLQ** | Desacopla ingestão de processamento; mensagens com falha vão para a DLQ após 3 tentativas | 1 |
-| **Workers** | Consomem a fila, normalizam o evento (canonical payload) e atualizam o read model | 2 |
-| **`field_snapshot`** | Read model (CQRS): estado consolidado e atual de cada talhão | 2 |
+| **Workers** | Consomem a fila, normalizam o evento (canonical payload) em `core` e atualizam o read model | 2 |
+| **`read.field_snapshot`** | Read model (CQRS): estado consolidado e atual de cada talhão | 2 |
 | **Harness** | Regras determinísticas e anti-spam que decidem se vale alertar, antes de qualquer LLM | 3 |
 | **Agente LLM** | Redige o alerta a partir do snapshot, com saída estruturada (Pydantic) e evals | 3 |
 | **Canal** | Adaptador de saída: `ConsoleChannel` primeiro, `WhatsAppChannel` depois | 3–4 |
@@ -37,11 +37,11 @@
 ## Fluxo de ingestão (Fase 1)
 
 1. A fonte chega (poll ou webhook) e calculamos a `idempotency_key`.
-2. `INSERT INTO raw_events ... ON CONFLICT (idempotency_key) DO NOTHING RETURNING id`.
+2. `INSERT INTO raw.<fonte>_events ... ON CONFLICT (idempotency_key) DO NOTHING RETURNING id`.
 3. Sem `id` de volta → duplicata: responde OK e **não** publica nada.
-4. Com `id` → depois do commit, publica uma mensagem fina na fila (`event_id` + metadados, sem o payload).
+4. Com `id` → depois do commit, publica uma mensagem fina na fila (`source` + `event_id` + metadados, sem o payload).
 
-Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR-0003](docs/decisions/0003-sqs-standard-com-dlq.md), [ADR-0004](docs/decisions/0004-publicar-apos-commit-sem-outbox.md).
+Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR-0003](docs/decisions/0003-sqs-standard-com-dlq.md), [ADR-0004](docs/decisions/0004-publicar-apos-commit-sem-outbox.md), [ADR-0010](docs/decisions/0010-schemas-do-banco.md).
 
 ### Chaves de idempotência
 
@@ -52,13 +52,22 @@ Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR
 
 ## Modelo de dados
 
-### `raw_events`
+Três schemas ([ADR-0010](docs/decisions/0010-schemas-do-banco.md)). Toda mudança de estrutura entra por `migrations/<Numero>__DDL__<nome>.sql` ([ADR-0009](docs/decisions/0009-migrations-versionadas.md)).
+
+| Schema | Conteúdo | Regra |
+|---|---|---|
+| `raw` | Dados como chegaram, uma tabela por fonte | Só `INSERT` |
+| `core` | Eventos canônicos, `tenants`, `fields`, alertas enviados | Fonte da verdade do domínio |
+| `read` | Read models (`field_snapshot`) | Reconstruível a partir de `core` |
+
+### `raw.open_meteo_events` e `raw.field_events`
+
+Colunas comuns às duas (cada fonte pode ganhar colunas próprias):
 
 | Coluna | Tipo | Notas |
 |---|---|---|
 | `id` | UUID | PK |
 | `idempotency_key` | text | UNIQUE |
-| `source` | text | `open_meteo`, `field_webhook`, ... |
 | `tenant_id` | text | |
 | `field_id` | text | talhão |
 | `occurred_at` | timestamptz | quando o fato aconteceu |
@@ -68,7 +77,7 @@ Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR
 
 Índices: `(field_id, occurred_at DESC)` e GIN em `payload`.
 
-### `field_snapshot` (Fase 2)
+### `read.field_snapshot` (Fase 2)
 
 Uma linha por talhão com o último estado consolidado (clima recente, próximas horas, operações agendadas). Esquema a definir em ADR próprio.
 

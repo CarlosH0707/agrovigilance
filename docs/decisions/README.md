@@ -11,9 +11,12 @@ Status possíveis: `proposta` · `aceita` · `substituída por ADR-NNNN` · `des
 | [0003](0003-sqs-standard-com-dlq.md) | SQS Standard + DLQ, idempotência na aplicação | aceita |
 | [0004](0004-publicar-apos-commit-sem-outbox.md) | Publicar na fila após o commit, sem outbox por enquanto | aceita |
 | [0005](0005-canal-de-notificacao-como-adaptador.md) | Canal de notificação como adaptador (Console → WhatsApp) | aceita |
-| [0006](0006-stack-e-ambiente-local.md) | Stack e ambiente local | proposta |
+| [0006](0006-stack-e-ambiente-local.md) | Infraestrutura local: Postgres 19 e Floci no Docker do WSL | aceita |
 | [0007](0007-harness-deterministico-antes-do-llm.md) | Harness determinístico antes do LLM | aceita |
 | [0008](0008-fluxo-de-branches.md) | Fluxo de branches: nada de commit direto na `main` | aceita |
+| [0009](0009-migrations-versionadas.md) | Toda mudança de tabela é uma migration versionada | aceita |
+| [0010](0010-schemas-do-banco.md) | Schemas do banco: `raw`, `core` e `read` | aceita |
+| [0011](0011-python-uv-e-testes.md) | Python 3.14, `uv` e testes unitários com `pytest` desde o início | aceita |
 
 ## Template
 
