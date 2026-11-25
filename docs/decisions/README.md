@@ -20,6 +20,9 @@ Status possíveis: `proposta` · `aceita` · `substituída por ADR-NNNN` · `des
 | [0012](0012-testes-ao-lado-do-codigo.md) | Testes unitários ao lado do código (`<modulo>_test.py`) | aceita |
 | [0013](0013-migrations-no-padrao-flyway-com-runner-proprio.md) | Migrations no padrão de nomes do Flyway, aplicadas por um runner próprio | aceita |
 | [0014](0014-testes-de-integracao-com-testcontainers.md) | Testes de integração com testcontainers | aceita |
+| [0015](0015-filas-criadas-por-script-e-testadas-no-floci.md) | Filas criadas por script idempotente e testadas contra o Floci | aceita |
+| [0016](0016-fastapi-para-a-api-http.md) | FastAPI + uvicorn para a API HTTP | aceita |
+| [0017](0017-camadas-dentro-do-pacote.md) | Código organizado em camadas dentro do pacote | aceita |
 
 ## Template
 
