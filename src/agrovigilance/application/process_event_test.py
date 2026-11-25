@@ -54,52 +54,64 @@ class FakeCore:
         self.items.setdefault(item.raw_event_id, item)  # como o ON CONFLICT DO NOTHING
 
 
+class FakeSnapshot:
+    def __init__(self):
+        self.refreshed = []
+
+    def refresh(self, tenant_id, field_id):
+        self.refreshed.append((tenant_id, field_id))
+
+
 def only_id(raw):
     [event_id] = raw.rows
     return event_id
 
 
 def test_weather_goes_to_core_and_raw_is_processed():
-    raw, core = FakeRaw(WEATHER_PAYLOAD), FakeCore()
+    raw, core, snapshot = FakeRaw(WEATHER_PAYLOAD), FakeCore(), FakeSnapshot()
     event_id = only_id(raw)
 
-    assert process_weather(event_id, raw, core) == "processed"
+    assert process_weather(event_id, raw, core, snapshot) == "processed"
     assert core.items[event_id].wind_speed_kmh == 7.2
     assert core.items[event_id].fetched_at == NOW  # o ingested_at do raw
+    assert snapshot.refreshed == [("t1", "f1")]
     assert raw.status == {event_id: "processed"}
 
 
 def test_processing_twice_keeps_one_canonical_row():
-    raw, core = FakeRaw({"type": "pulverizacao_concluida"}), FakeCore()
+    raw, core, snapshot = FakeRaw({"type": "pulverizacao_concluida"}), FakeCore(), FakeSnapshot()
     event_id = only_id(raw)
 
-    process_field_operation(event_id, raw, core)
-    process_field_operation(event_id, raw, core)
+    process_field_operation(event_id, raw, core, snapshot)
+    process_field_operation(event_id, raw, core, snapshot)
     assert list(core.items) == [event_id]
+    assert snapshot.refreshed == [("t1", "f1")] * 2  # recalcular de novo é inofensivo
     assert raw.status == {event_id: "processed"}
 
 
 def test_invalid_operation_is_rejected_without_error():
-    raw, core = FakeRaw({"type": "colheita"}), FakeCore()
+    raw, core, snapshot = FakeRaw({"type": "colheita"}), FakeCore(), FakeSnapshot()
     event_id = only_id(raw)
 
-    assert process_field_operation(event_id, raw, core) == "rejected"
+    assert process_field_operation(event_id, raw, core, snapshot) == "rejected"
     assert core.items == {}
+    assert snapshot.refreshed == []
     assert raw.status == {event_id: "rejected"}
 
 
 def test_bad_weather_unit_raises_so_the_message_goes_back():
     payload = {**WEATHER_PAYLOAD, "hourly_units": {}}
-    raw, core = FakeRaw(payload), FakeCore()
+    raw, core, snapshot = FakeRaw(payload), FakeCore(), FakeSnapshot()
 
     with pytest.raises(ValueError, match="unidade"):
-        process_weather(only_id(raw), raw, core)
+        process_weather(only_id(raw), raw, core, snapshot)
+    assert snapshot.refreshed == []
     assert raw.status == {}
 
 
 def test_missing_raw_row_raises():
     with pytest.raises(LookupError):
-        process_weather(uuid4(), FakeRaw(), FakeCore())
+        process_weather(uuid4(), FakeRaw(), FakeCore(), FakeSnapshot())
 
 
 def test_handle_routes_by_source():

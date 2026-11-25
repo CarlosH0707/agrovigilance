@@ -32,7 +32,7 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 
 - [x] Canonical payload (formato interno único por tipo de evento): tabelas por tipo em `core` (ADR-0019)
 - [x] Worker consumidor idempotente, em loop com long polling (ADR-0021)
-- [ ] `field_snapshot` por talhão (ADR do esquema)
+- [x] `field_snapshot` por talhão, recalculado a partir de `core` (ADR-0022)
 - [ ] Teste de DLQ e redrive
 
 ## Fase 3 — Harness e alertas

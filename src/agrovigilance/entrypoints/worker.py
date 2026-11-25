@@ -29,6 +29,9 @@ from agrovigilance.infrastructure.database.raw.field_events.repository import Fi
 from agrovigilance.infrastructure.database.raw.open_meteo_events.repository import (
     OpenMeteoEventRepository,
 )
+from agrovigilance.infrastructure.database.read.field_snapshot.repository import (
+    FieldSnapshotRepository,
+)
 from agrovigilance.infrastructure.queues.events.consumer import EventsConsumer, ReceivedMessage
 from agrovigilance.infrastructure.queues.events.publisher import QUEUE_NAME
 
@@ -36,16 +39,19 @@ log = logging.getLogger(__name__)
 
 
 def handlers_for(conn: psycopg.Connection) -> dict[str, Handler]:
+    snapshot = FieldSnapshotRepository(conn)
     return {
         "open_meteo_events": partial(
             process_weather,
             raw=OpenMeteoEventRepository(conn),
             core=WeatherForecastRepository(conn),
+            snapshot=snapshot,
         ),
         "field_events": partial(
             process_field_operation,
             raw=FieldEventRepository(conn),
             core=FieldOperationRepository(conn),
+            snapshot=snapshot,
         ),
     }
 
