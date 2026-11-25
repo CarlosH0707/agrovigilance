@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 QUEUE_NAME = "agrovigilance-events"
+DLQ_NAME = f"{QUEUE_NAME}-dlq"
 
 
 class EventsPublisher:
