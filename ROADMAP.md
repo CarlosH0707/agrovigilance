@@ -31,7 +31,7 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 **Pronto quando:** um worker consome a fila e `field_snapshot` reflete o último estado do talhão; mensagem que falha 3x cai na DLQ.
 
 - [x] Canonical payload (formato interno único por tipo de evento): tabelas por tipo em `core` (ADR-0019)
-- [ ] Worker consumidor idempotente
+- [x] Worker consumidor idempotente, em loop com long polling (ADR-0021)
 - [ ] `field_snapshot` por talhão (ADR do esquema)
 - [ ] Teste de DLQ e redrive
 

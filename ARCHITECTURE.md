@@ -1,6 +1,6 @@
 # Arquitetura
 
-> Estado: **Fase 2 em andamento.** Fase 1 concluída (raw, fila + DLQ, webhook e poller idempotentes). Na Fase 2: formato canônico em `core` (migrations V0004–V0005, ADR-0019); o worker vem a seguir. Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
+> Estado: **Fase 2 em andamento.** Fase 1 concluída (raw, fila + DLQ, webhook e poller idempotentes). Na Fase 2: formato canônico em `core` (migrations V0004–V0005, ADR-0019) e worker em loop com long polling (ADR-0021); o `field_snapshot` vem a seguir. Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
 
 ## Visão geral
 
@@ -42,13 +42,14 @@ Na Fase 4, a mensagem do WhatsApp em texto livre passa por um LLM que extrai o a
 Camadas dentro de `src/agrovigilance/` ([ADR-0017](docs/decisions/0017-camadas-dentro-do-pacote.md)):
 
 ```
-domain/          regras puras (FieldEvent, WeatherReading, idempotency_key; canônicos WeatherForecast e FieldOperation)
-application/     casos de uso + portas (ingest_field_event: EventStore, Publisher; ingest_weather: WeatherStore)
+domain/          regras puras (FieldEvent, WeatherReading, idempotency_key; canônicos WeatherForecast e FieldOperation; RawEvent)
+application/     casos de uso + portas (ingest_field_event: EventStore, Publisher; ingest_weather: WeatherStore;
+                 process_event: RawEvents, CanonicalStore)
 infrastructure/  adaptadores
   database/      connection.py + <schema>/<tabela>/{repository.py, queries/*.sql}
-  queues/        <fila>/publisher.py
+  queues/        <fila>/publisher.py e consumer.py
   open_meteo/    client.py (busca + quebra em uma leitura por hora)
-entrypoints/     API FastAPI (api.py), poller.py (uma coleta da Open-Meteo); depois worker
+entrypoints/     API FastAPI (api.py), poller.py (uma coleta da Open-Meteo), worker.py (loop na fila)
 ```
 
 ## Fluxo de ingestão (Fase 1)
@@ -70,6 +71,16 @@ Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR
 |---|---|
 | Webhook de campo | `field_event:{source_event_id}`, ou hash de `(tenant_id, field_id, type, occurred_at)` se a origem não mandar id |
 | Open-Meteo | `weather:{tenant_id}:{field_id}:{target_hour}:{bucket}`, com bucket = hora da coleta, tudo em UTC ([ADR-0018](docs/decisions/0018-ingestao-open-meteo-por-hora.md)) |
+
+## Fluxo de processamento (Fase 2)
+
+O worker ([ADR-0021](docs/decisions/0021-worker-em-loop-com-long-polling.md)) roda em loop: `uv run --env-file .env python -m agrovigilance.entrypoints.worker`.
+
+1. Long polling na fila (até 10 mensagens, espera de até 20 s).
+2. Valida a mensagem (`source` + `event_id`) e lê a linha do raw.
+3. Converte para o formato canônico e grava em `core` com `ON CONFLICT (raw_event_id) DO NOTHING`.
+4. Marca o raw como `processed` (ou `rejected`, se o apontamento for inválido) e **só então** apaga a mensagem.
+5. Erro inesperado: não apaga. A mensagem volta após o visibility timeout e, no 3º recebimento, vai para a DLQ.
 
 ## Modelo de dados
 
