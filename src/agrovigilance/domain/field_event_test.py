@@ -28,7 +28,12 @@ def test_key_hash_is_deterministic_and_ignores_timezone_notation():
 
 @pytest.mark.parametrize(
     "change",
-    [{"type": "spray_completed"}, {"field_id": "f2"}, {"tenant_id": "t2"}, {"occurred_at": "2026-11-25T10:00:01Z"}],
+    [
+        {"type": "spray_completed"},
+        {"field_id": "f2"},
+        {"tenant_id": "t2"},
+        {"occurred_at": "2026-11-25T10:00:01Z"},
+    ],
 )
 def test_key_hash_changes_with_identifying_fields(change):
     assert idempotency_key(event(**change)) != idempotency_key(event())

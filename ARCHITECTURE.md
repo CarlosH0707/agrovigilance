@@ -39,12 +39,13 @@
 Camadas dentro de `src/agrovigilance/` ([ADR-0017](docs/decisions/0017-camadas-dentro-do-pacote.md)):
 
 ```
-domain/          regras puras (FieldEvent, idempotency_key)
-application/     casos de uso + portas (ingest_field_event: EventStore, Publisher)
+domain/          regras puras (FieldEvent, WeatherReading, idempotency_key)
+application/     casos de uso + portas (ingest_field_event: EventStore, Publisher; ingest_weather: WeatherStore)
 infrastructure/  adaptadores
   database/      connection.py + <schema>/<tabela>/{repository.py, queries/*.sql}
   queues/        <fila>/publisher.py
-entrypoints/     API FastAPI (api.py); depois worker e poller
+  open_meteo/    client.py (busca + quebra em uma leitura por hora)
+entrypoints/     API FastAPI (api.py), poller.py (uma coleta da Open-Meteo); depois worker
 ```
 
 ## Fluxo de ingestão (Fase 1)
@@ -56,6 +57,8 @@ entrypoints/     API FastAPI (api.py); depois worker e poller
 
 `POST /webhooks/field` ([ADR-0016](docs/decisions/0016-fastapi-para-a-api-http.md)) exige `tenant_id`, `field_id`, `type` (texto livre na Fase 1) e `occurred_at` com fuso; `source_event_id` é opcional e campos extras são guardados no payload. Responde **202** (novo, com `event_id`), **200** (`duplicate`) ou **422** (inválido).
 
+O poller da Open-Meteo ([ADR-0018](docs/decisions/0018-ingestao-open-meteo-por-hora.md)) busca 48h de previsão horária do talhão fixo do `.env` e grava uma linha por hora prevista: `uv run --env-file .env python -m agrovigilance.entrypoints.poller`.
+
 Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR-0003](docs/decisions/0003-sqs-standard-com-dlq.md), [ADR-0004](docs/decisions/0004-publicar-apos-commit-sem-outbox.md), [ADR-0010](docs/decisions/0010-schemas-do-banco.md).
 
 ### Chaves de idempotência
@@ -63,7 +66,7 @@ Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR
 | Fonte | Chave |
 |---|---|
 | Webhook de campo | `field_event:{source_event_id}`, ou hash de `(tenant_id, field_id, type, occurred_at)` se a origem não mandar id |
-| Open-Meteo | `weather:{field_id}:{target_hour}:{bucket}` |
+| Open-Meteo | `weather:{tenant_id}:{field_id}:{target_hour}:{bucket}`, com bucket = hora da coleta, tudo em UTC ([ADR-0018](docs/decisions/0018-ingestao-open-meteo-por-hora.md)) |
 
 ## Modelo de dados
 

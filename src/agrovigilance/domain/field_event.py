@@ -22,5 +22,5 @@ def idempotency_key(event: FieldEvent) -> str:
     if event.source_event_id:
         return f"field_event:{event.source_event_id}"
     occurred = event.occurred_at.astimezone(UTC).isoformat()
-    parts = "|".join([event.tenant_id, event.field_id, event.type, occurred])
+    parts = f"{event.tenant_id}|{event.field_id}|{event.type}|{occurred}"
     return f"field_event:{hashlib.sha256(parts.encode()).hexdigest()}"

@@ -40,9 +40,7 @@ def test_duplicate_post_stores_once_and_publishes_once(db, sqs):
         finally:
             app.dependency_overrides = {}
 
-        rows = conn.execute(
-            "SELECT id, idempotency_key, payload FROM raw.field_events"
-        ).fetchall()
+        rows = conn.execute("SELECT id, idempotency_key, payload FROM raw.field_events").fetchall()
 
     assert (first.status_code, again.status_code) == (202, 200)
     [(row_id, key, payload)] = rows
