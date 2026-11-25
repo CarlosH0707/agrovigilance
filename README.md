@@ -16,7 +16,7 @@ Quem toca uma lavoura olha dez telas diferentes para decidir se dá para pulveri
 
 ## Estado atual
 
-✅ **Fase 0 (documentação) concluída.** 🚧 **Fase 1** em andamento: setup e migrations prontos (Python + Postgres 19 + Floci, schemas e tabelas raw); falta a ingestão idempotente. Veja o [ROADMAP](ROADMAP.md).
+✅ **Fase 0 (documentação) concluída.** 🚧 **Fase 1** em andamento: setup, migrations e filas prontos (Python + Postgres 19 + Floci, schemas, tabelas raw, fila + DLQ); falta a ingestão idempotente. Veja o [ROADMAP](ROADMAP.md).
 
 ## Documentação
 
@@ -39,8 +39,9 @@ Pré-requisitos: Docker Engine com Compose e [`uv`](https://docs.astral.sh/uv/).
 cp .env.example .env        # ajuste se quiser; o .env fica fora do git
 docker compose up -d --wait # Postgres 19 (porta 5432) e Floci/SQS (porta 4566)
 uv run --env-file .env python scripts/migrate.py  # aplica as migrations pendentes
+uv run --env-file .env python scripts/create_queues.py  # cria fila + DLQ (o Floci não guarda: rode após cada up)
 uv run pytest                  # testes unitários (não precisam do Docker)
-uv run pytest -m integration   # testes de integração (sobem um Postgres descartável via testcontainers)
+uv run pytest -m integration   # testes de integração (sobem Postgres e Floci descartáveis via testcontainers)
 ```
 
 Testes unitários ficam ao lado do módulo que testam (`foo.py` → `foo_test.py`); `tests/` guarda só config compartilhada e o smoke test ([ADR-0012](docs/decisions/0012-testes-ao-lado-do-codigo.md)).

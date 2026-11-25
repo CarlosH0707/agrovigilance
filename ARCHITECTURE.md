@@ -27,7 +27,7 @@
 | **Ingestão Open-Meteo** | Busca previsão horária por talhão e grava em `raw.open_meteo_events` | 1 |
 | **API de webhook** (`POST /webhooks/field`) | Recebe apontamentos de campo e grava em `raw.field_events` | 1 |
 | **Schema `raw`** | Log bruto e imutável de tudo que entrou, uma tabela por fonte, com chave de idempotência | 1 |
-| **Fila + DLQ** | Desacopla ingestão de processamento; mensagens com falha vão para a DLQ após 3 tentativas | 1 |
+| **Fila + DLQ** | Desacopla ingestão de processamento; mensagens com falha vão para a DLQ após 3 tentativas; criadas por `scripts/create_queues.py` ([ADR-0015](docs/decisions/0015-filas-criadas-por-script-e-testadas-no-floci.md)) | 1 |
 | **Workers** | Consomem a fila, normalizam o evento (canonical payload) em `core` e atualizam o read model | 2 |
 | **`read.field_snapshot`** | Read model (CQRS): estado consolidado e atual de cada talhão | 2 |
 | **Harness** | Regras determinísticas e anti-spam que decidem se vale alertar, antes de qualquer LLM | 3 |
