@@ -8,8 +8,9 @@ import json
 
 import boto3
 
-QUEUE_NAME = "agrovigilance-events"
-DLQ_NAME = "agrovigilance-events-dlq"
+from agrovigilance.infrastructure.queues.events.publisher import QUEUE_NAME
+
+DLQ_NAME = f"{QUEUE_NAME}-dlq"
 MAX_RECEIVE_COUNT = 3
 
 

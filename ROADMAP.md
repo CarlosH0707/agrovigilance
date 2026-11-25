@@ -21,7 +21,7 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 - [x] Migrations: schemas `raw`/`core`/`read`, `raw.open_meteo_events`, `raw.field_events` (runner próprio, ADR-0013)
 - [x] Testes de integração com testcontainers (ADR-0014)
 - [x] Filas `agrovigilance-events` e `agrovigilance-events-dlq` (`maxReceiveCount=3`), com teste de integração contra o Floci (ADR-0015)
-- [ ] `POST /webhooks/field` com idempotência
+- [x] `POST /webhooks/field` com idempotência, publicação na fila e teste de integração (ADR-0016, ADR-0017)
 - [ ] Ingestão Open-Meteo para um talhão fixo
 - [ ] Testes unitários das chaves de idempotência e do fluxo de ingestão (com fakes)
 - [ ] Conferência manual do envio duplicado (webhook e Open-Meteo)

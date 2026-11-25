@@ -5,13 +5,13 @@ Uso: uv run --env-file .env python scripts/migrate.py
 """
 
 import hashlib
-import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
 import psycopg
-from psycopg.conninfo import make_conninfo
+
+from agrovigilance.infrastructure.database.connection import conninfo_from_env
 
 MIGRATIONS_DIR = Path(__file__).resolve().parents[1] / "migrations"
 NAME_PATTERN = re.compile(r"^V(\d{4})__[a-z0-9_]+\.sql$")
@@ -86,16 +86,6 @@ def migrate(conninfo: str, directory: Path = MIGRATIONS_DIR) -> list[str]:
         finally:
             conn.execute("SELECT pg_advisory_unlock(%s)", (LOCK_ID,))
     return done
-
-
-def conninfo_from_env() -> str:
-    return make_conninfo(
-        host=os.environ.get("POSTGRES_HOST", "localhost"),
-        port=os.environ.get("POSTGRES_PORT", "5432"),
-        dbname=os.environ["POSTGRES_DB"],
-        user=os.environ["POSTGRES_USER"],
-        password=os.environ["POSTGRES_PASSWORD"],
-    )
 
 
 if __name__ == "__main__":
