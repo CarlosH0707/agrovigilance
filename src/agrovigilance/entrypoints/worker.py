@@ -95,7 +95,13 @@ def main() -> None:
     conninfo = conninfo_from_env()
     log.info("worker ouvindo %s", QUEUE_NAME)
     while not stop.is_set():
-        process_once(consumer, conninfo)
+        try:
+            process_once(consumer, conninfo)
+        except Exception:
+            # Banco ou fila fora: as mensagens não apagadas voltam sozinhas (e vão para a DLQ
+            # na 3ª vez). Espera um pouco para não girar em falso e tenta de novo.
+            log.exception("ciclo falhou; tentando de novo")
+            stop.wait(5)
     log.info("worker encerrado")
 
 

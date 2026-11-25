@@ -16,7 +16,7 @@ Quem toca uma lavoura olha dez telas diferentes para decidir se dá para pulveri
 
 ## Estado atual
 
-✅ **Fases 0 e 1 concluídas**: documentação, setup (Python + Postgres 19 + Floci), migrations, fila + DLQ, webhook `POST /webhooks/field` e poller da Open-Meteo idempotentes, conferidos manualmente. Próxima: **Fase 2** (worker e read model). Veja o [ROADMAP](ROADMAP.md).
+✅ **Fases 0, 1 e 2 concluídas**: documentação, setup (Python + Postgres 19 + Floci), migrations, fila + DLQ, webhook e poller da Open-Meteo idempotentes, worker que leva os eventos para `core` e `read.field_snapshot`, DLQ com redrive. Próxima: **Fase 3** (harness e alertas). Veja o [ROADMAP](ROADMAP.md).
 
 ## Documentação
 
@@ -40,6 +40,7 @@ cp .env.example .env        # ajuste se quiser; o .env fica fora do git
 docker compose up -d --wait # Postgres 19 (porta 5432) e Floci/SQS (porta 4566)
 uv run --env-file .env python scripts/migrate.py  # aplica as migrations pendentes
 uv run --env-file .env python scripts/create_queues.py  # cria fila + DLQ (o Floci não guarda: rode após cada up)
+uv run --env-file .env python scripts/redrive_dlq.py  # devolve a DLQ para a fila, depois de corrigir a causa
 uv run --env-file .env uvicorn agrovigilance.entrypoints.api:app  # API em http://localhost:8000 (/docs)
 uv run pytest                  # testes unitários (não precisam do Docker)
 uv run pytest -m integration   # testes de integração (sobem Postgres e Floci descartáveis via testcontainers)

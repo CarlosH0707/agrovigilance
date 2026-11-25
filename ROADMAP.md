@@ -26,14 +26,14 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 - [x] Testes unitários das chaves de idempotência e do fluxo de ingestão (com fakes)
 - [x] Conferência manual do envio duplicado (webhook e Open-Meteo)
 
-## Fase 2 — Processamento e read model
+## Fase 2 — Processamento e read model ✅ concluída
 
 **Pronto quando:** um worker consome a fila e `field_snapshot` reflete o último estado do talhão; mensagem que falha 3x cai na DLQ.
 
 - [x] Canonical payload (formato interno único por tipo de evento): tabelas por tipo em `core` (ADR-0019)
 - [x] Worker consumidor idempotente, em loop com long polling (ADR-0021)
 - [x] `field_snapshot` por talhão, recalculado a partir de `core` (ADR-0022)
-- [ ] Teste de DLQ e redrive
+- [x] Teste de DLQ e redrive, com redrive nativo por script (ADR-0023)
 
 ## Fase 3 — Harness e alertas
 
