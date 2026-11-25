@@ -11,7 +11,7 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 - [x] Schemas do banco e nomes das tabelas raw (ADR-0010)
 - [x] Python 3.14, `uv` e `pytest` (ADR-0011)
 
-## Fase 1 — Setup e ingestão idempotente
+## Fase 1 — Setup e ingestão idempotente ✅ concluída
 
 **Pronto quando:** o mesmo evento enviado duas vezes gera uma linha na tabela raw e uma mensagem na fila, e a lógica tem testes unitários passando (e de integração onde só o banco garante, ADR-0014).
 
@@ -24,7 +24,7 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 - [x] `POST /webhooks/field` com idempotência, publicação na fila e teste de integração (ADR-0016, ADR-0017)
 - [x] Ingestão Open-Meteo para um talhão fixo (ADR-0018)
 - [x] Testes unitários das chaves de idempotência e do fluxo de ingestão (com fakes)
-- [ ] Conferência manual do envio duplicado (webhook e Open-Meteo)
+- [x] Conferência manual do envio duplicado (webhook e Open-Meteo)
 
 ## Fase 2 — Processamento e read model
 
