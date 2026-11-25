@@ -9,7 +9,7 @@ import time
 
 import boto3
 
-from scripts.create_queues import DLQ_NAME
+from agrovigilance.infrastructure.queues.events.publisher import DLQ_NAME
 
 
 def redrive(sqs, dlq_name: str = DLQ_NAME, timeout: float = 60.0) -> int:
