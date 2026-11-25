@@ -1,6 +1,6 @@
 # Arquitetura
 
-> Estado: **Fase 1 em andamento.** Implementado até aqui: schemas e tabelas raw (migrations V0001–V0003), fila + DLQ e `POST /webhooks/field` idempotente. Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
+> Estado: **Fase 2 em andamento.** Fase 1 concluída (raw, fila + DLQ, webhook e poller idempotentes). Na Fase 2: formato canônico em `core` (migrations V0004–V0005, ADR-0019); o worker vem a seguir. Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
 
 ## Visão geral
 
@@ -39,7 +39,7 @@
 Camadas dentro de `src/agrovigilance/` ([ADR-0017](docs/decisions/0017-camadas-dentro-do-pacote.md)):
 
 ```
-domain/          regras puras (FieldEvent, WeatherReading, idempotency_key)
+domain/          regras puras (FieldEvent, WeatherReading, idempotency_key; canônicos WeatherForecast e FieldOperation)
 application/     casos de uso + portas (ingest_field_event: EventStore, Publisher; ingest_weather: WeatherStore)
 infrastructure/  adaptadores
   database/      connection.py + <schema>/<tabela>/{repository.py, queries/*.sql}
@@ -91,9 +91,17 @@ Colunas comuns às duas (cada fonte pode ganhar colunas próprias):
 | `occurred_at` | timestamptz | quando o fato aconteceu |
 | `ingested_at` | timestamptz | quando chegou, `DEFAULT now()` |
 | `payload` | JSONB | payload bruto, como veio |
-| `status` | text | ciclo de processamento, `DEFAULT 'received'` (valores definidos na Fase 2) |
+| `status` | text | `received` → `processed` ou `rejected` ([ADR-0019](docs/decisions/0019-canonical-payload-por-tipo.md)); única coluna que muda |
 
 Índices: `(field_id, occurred_at DESC)` e GIN em `payload`.
+
+### `core.weather_forecasts` e `core.field_operations` (canonical payload)
+
+Formato interno por tipo de evento, com colunas tipadas ([ADR-0019](docs/decisions/0019-canonical-payload-por-tipo.md)). A conversão raw → canônico é código puro em `domain/`.
+
+- Cada linha tem `raw_event_id` (UNIQUE + FK para o raw de origem), o que faz o reprocessamento da mesma mensagem não duplicar nada.
+- `core.weather_forecasts`: `target_hour`, `fetched_at` (= `raw.ingested_at`), `temperature_c`, `relative_humidity_pct`, `precipitation_probability_pct`, `wind_speed_kmh` (podem ser nulos). Unidade inesperada no payload é erro.
+- `core.field_operations`: `type` na lista fechada (`pulverizacao_agendada`, `pulverizacao_concluida`), `occurred_at` e `scheduled_for` (obrigatório no agendamento). O que não cabe vira `rejected` no raw, sem ir para a DLQ.
 
 ### `read.field_snapshot` (Fase 2)
 
