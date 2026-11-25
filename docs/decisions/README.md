@@ -17,6 +17,7 @@ Status possíveis: `proposta` · `aceita` · `substituída por ADR-NNNN` · `des
 | [0009](0009-migrations-versionadas.md) | Toda mudança de tabela é uma migration versionada | aceita |
 | [0010](0010-schemas-do-banco.md) | Schemas do banco: `raw`, `core` e `read` | aceita |
 | [0011](0011-python-uv-e-testes.md) | Python 3.14, `uv` e testes unitários com `pytest` desde o início | aceita |
+| [0012](0012-testes-ao-lado-do-codigo.md) | Testes unitários ao lado do código (`<modulo>_test.py`) | aceita |
 
 ## Template
 
