@@ -23,6 +23,7 @@ Status possíveis: `proposta` · `aceita` · `substituída por ADR-NNNN` · `des
 | [0015](0015-filas-criadas-por-script-e-testadas-no-floci.md) | Filas criadas por script idempotente e testadas contra o Floci | aceita |
 | [0016](0016-fastapi-para-a-api-http.md) | FastAPI + uvicorn para a API HTTP | aceita |
 | [0017](0017-camadas-dentro-do-pacote.md) | Código organizado em camadas dentro do pacote | aceita |
+| [0018](0018-ingestao-open-meteo-por-hora.md) | Ingestão da Open-Meteo: uma linha por hora prevista e por coleta | aceita |
 
 ## Template
 

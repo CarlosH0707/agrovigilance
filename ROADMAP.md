@@ -22,8 +22,8 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 - [x] Testes de integração com testcontainers (ADR-0014)
 - [x] Filas `agrovigilance-events` e `agrovigilance-events-dlq` (`maxReceiveCount=3`), com teste de integração contra o Floci (ADR-0015)
 - [x] `POST /webhooks/field` com idempotência, publicação na fila e teste de integração (ADR-0016, ADR-0017)
-- [ ] Ingestão Open-Meteo para um talhão fixo
-- [ ] Testes unitários das chaves de idempotência e do fluxo de ingestão (com fakes)
+- [x] Ingestão Open-Meteo para um talhão fixo (ADR-0018)
+- [x] Testes unitários das chaves de idempotência e do fluxo de ingestão (com fakes)
 - [ ] Conferência manual do envio duplicado (webhook e Open-Meteo)
 
 ## Fase 2 — Processamento e read model
