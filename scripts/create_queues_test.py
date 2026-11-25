@@ -21,7 +21,7 @@ class FakeSQS:
 
     def get_queue_attributes(self, QueueUrl, AttributeNames):
         name = QueueUrl.rsplit("/", 1)[1]
-        return {"Attributes": {"QueueArn": f"arn:aws:sqs:us-east-1:000:{name}"}}
+        return {"Attributes": {"QueueArn": f"arn:aws:sqs:sa-east-1:000:{name}"}}
 
 
 def test_creates_dlq_first_and_redrives_to_it():
@@ -33,7 +33,7 @@ def test_creates_dlq_first_and_redrives_to_it():
     assert sqs.created == [DLQ_NAME, QUEUE_NAME]
     redrive = json.loads(sqs.queues[QUEUE_NAME]["RedrivePolicy"])
     assert redrive == {
-        "deadLetterTargetArn": f"arn:aws:sqs:us-east-1:000:{DLQ_NAME}",
+        "deadLetterTargetArn": f"arn:aws:sqs:sa-east-1:000:{DLQ_NAME}",
         "maxReceiveCount": "3",
     }
 
