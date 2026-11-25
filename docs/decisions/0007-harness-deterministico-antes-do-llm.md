@@ -1,6 +1,6 @@
 # 0007. Harness determinístico antes do LLM
 
-- **Status:** aceita
+- **Status:** aceita, com o papel do LLM substituído pelo [ADR-0020](0020-llm-na-entrada-e-nao-no-alerta.md) (o alerta sai de template; o LLM interpreta a entrada em texto livre)
 - **Data:** 2026-11-24
 
 ## Contexto

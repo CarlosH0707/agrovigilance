@@ -14,11 +14,13 @@
                                                  agrovigilance-events-dlq   read.field_snapshot
                                                                                    │
                                                                                    ▼
-                                                            Harness (regras + anti-spam) ─► LLM (opcional)
+                                                            Harness (regras + anti-spam) ─► alerta por template
                                                                                    │
                                                                                    ▼
                                                                 Canal (Console → WhatsApp)
 ```
+
+Na Fase 4, a mensagem do WhatsApp em texto livre passa por um LLM que extrai o apontamento (Pydantic) e entra no mesmo fluxo do webhook ([ADR-0020](docs/decisions/0020-llm-na-entrada-e-nao-no-alerta.md)).
 
 ## Componentes
 
@@ -31,7 +33,8 @@
 | **Workers** | Consomem a fila, normalizam o evento (canonical payload) em `core` e atualizam o read model | 2 |
 | **`read.field_snapshot`** | Read model (CQRS): estado consolidado e atual de cada talhão | 2 |
 | **Harness** | Regras determinísticas e anti-spam que decidem se vale alertar, antes de qualquer LLM | 3 |
-| **Agente LLM** | Redige o alerta a partir do snapshot, com saída estruturada (Pydantic) e evals | 3 |
+| **Alerta por template** | Texto do alerta montado com os dados do snapshot, sem LLM ([ADR-0020](docs/decisions/0020-llm-na-entrada-e-nao-no-alerta.md)) | 3 |
+| **Agente LLM** | Interpreta o apontamento em texto livre do WhatsApp (saída Pydantic), pergunta o que faltar e responde perguntas com uma consulta ao snapshot; evals com mensagens reais | 4 |
 | **Canal** | Adaptador de saída: `ConsoleChannel` primeiro, `WhatsAppChannel` depois | 3–4 |
 
 ## Organização do código

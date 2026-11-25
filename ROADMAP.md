@@ -42,11 +42,13 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 - [ ] Regras determinísticas da janela de pulverização (limites em ADR)
 - [ ] Anti-spam / deduplicação de alertas
 - [ ] `ConsoleChannel`
-- [ ] Agente LLM com uma consulta ao snapshot, saída Pydantic e evals
+- [ ] Texto do alerta por template, sem LLM (ADR-0020)
 
 ## Fase 4 — WhatsApp e cotações
 
 - [ ] `WhatsAppChannel` (Cloud API oficial, medir custo dos alertas proativos)
+- [ ] Agente LLM que interpreta o apontamento em texto livre (saída Pydantic, pergunta o que faltar), com evals de mensagens reais (ADR-0020)
+- [ ] Responder perguntas do produtor com uma consulta ao snapshot (ADR-0020)
 - [ ] Cotações de soja/milho
 - [ ] Risco de colheita/tráfego no talhão
 
