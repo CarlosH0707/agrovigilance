@@ -1,6 +1,6 @@
 # Arquitetura
 
-> Estado: **desenho aprovado** (fim da Fase 0). Nada aqui está implementado ainda. Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
+> Estado: **Fase 1 em andamento.** Implementado até aqui: schemas e tabelas raw (migrations V0001–V0003). Decisões fechadas estão em [`docs/decisions/`](docs/decisions/).
 
 ## Visão geral
 
@@ -52,7 +52,7 @@ Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR
 
 ## Modelo de dados
 
-Três schemas ([ADR-0010](docs/decisions/0010-schemas-do-banco.md)). Toda mudança de estrutura entra por `migrations/<Numero>__DDL__<nome>.sql` ([ADR-0009](docs/decisions/0009-migrations-versionadas.md)).
+Três schemas ([ADR-0010](docs/decisions/0010-schemas-do-banco.md)). Toda mudança de estrutura entra por `migrations/V<NNNN>__<nome>.sql`, aplicada pelo runner `scripts/migrate.py`, que registra versão e checksum em `public.schema_migrations` ([ADR-0009](docs/decisions/0009-migrations-versionadas.md), [ADR-0013](docs/decisions/0013-migrations-no-padrao-flyway-com-runner-proprio.md)).
 
 | Schema | Conteúdo | Regra |
 |---|---|---|
@@ -66,14 +66,14 @@ Colunas comuns às duas (cada fonte pode ganhar colunas próprias):
 
 | Coluna | Tipo | Notas |
 |---|---|---|
-| `id` | UUID | PK |
+| `id` | UUID | PK, `DEFAULT uuidv7()` (ordenável por tempo) |
 | `idempotency_key` | text | UNIQUE |
 | `tenant_id` | text | |
 | `field_id` | text | talhão |
 | `occurred_at` | timestamptz | quando o fato aconteceu |
-| `ingested_at` | timestamptz | quando chegou |
+| `ingested_at` | timestamptz | quando chegou, `DEFAULT now()` |
 | `payload` | JSONB | payload bruto, como veio |
-| `status` | text | ciclo de processamento |
+| `status` | text | ciclo de processamento, `DEFAULT 'received'` (valores definidos na Fase 2) |
 
 Índices: `(field_id, occurred_at DESC)` e GIN em `payload`.
 

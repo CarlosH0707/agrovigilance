@@ -14,10 +14,12 @@ Status possíveis: `proposta` · `aceita` · `substituída por ADR-NNNN` · `des
 | [0006](0006-stack-e-ambiente-local.md) | Infraestrutura local: Postgres 19 e Floci no Docker do WSL | aceita |
 | [0007](0007-harness-deterministico-antes-do-llm.md) | Harness determinístico antes do LLM | aceita |
 | [0008](0008-fluxo-de-branches.md) | Fluxo de branches: nada de commit direto na `main` | aceita |
-| [0009](0009-migrations-versionadas.md) | Toda mudança de tabela é uma migration versionada | aceita |
+| [0009](0009-migrations-versionadas.md) | Toda mudança de tabela é uma migration versionada | aceita (nomes substituídos pelo 0013) |
 | [0010](0010-schemas-do-banco.md) | Schemas do banco: `raw`, `core` e `read` | aceita |
 | [0011](0011-python-uv-e-testes.md) | Python 3.14, `uv` e testes unitários com `pytest` desde o início | aceita |
 | [0012](0012-testes-ao-lado-do-codigo.md) | Testes unitários ao lado do código (`<modulo>_test.py`) | aceita |
+| [0013](0013-migrations-no-padrao-flyway-com-runner-proprio.md) | Migrations no padrão de nomes do Flyway, aplicadas por um runner próprio | aceita |
+| [0014](0014-testes-de-integracao-com-testcontainers.md) | Testes de integração com testcontainers | aceita |
 
 ## Template
 

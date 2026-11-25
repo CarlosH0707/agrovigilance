@@ -16,7 +16,7 @@ Quem toca uma lavoura olha dez telas diferentes para decidir se dá para pulveri
 
 ## Estado atual
 
-✅ **Fase 0 (documentação) concluída.** 🚧 **Fase 1** em andamento: setup pronto (Python + Postgres 19 + Floci); falta a ingestão idempotente. Veja o [ROADMAP](ROADMAP.md).
+✅ **Fase 0 (documentação) concluída.** 🚧 **Fase 1** em andamento: setup e migrations prontos (Python + Postgres 19 + Floci, schemas e tabelas raw); falta a ingestão idempotente. Veja o [ROADMAP](ROADMAP.md).
 
 ## Documentação
 
@@ -29,7 +29,7 @@ Quem toca uma lavoura olha dez telas diferentes para decidir se dá para pulveri
 
 ## Stack prevista
 
-Python 3.14 · `uv` · `pytest` · FastAPI · PostgreSQL 19 · SQS (Floci em dev) · Docker Compose. Detalhes em [ADR-0006](docs/decisions/0006-stack-e-ambiente-local.md) e [ADR-0011](docs/decisions/0011-python-uv-e-testes.md).
+Python 3.14 · `uv` · `pytest` · testcontainers · psycopg 3 · FastAPI · PostgreSQL 19 · SQS (Floci em dev) · Docker Compose. Detalhes em [ADR-0006](docs/decisions/0006-stack-e-ambiente-local.md) e [ADR-0011](docs/decisions/0011-python-uv-e-testes.md).
 
 ## Como rodar
 
@@ -38,7 +38,9 @@ Pré-requisitos: Docker Engine com Compose e [`uv`](https://docs.astral.sh/uv/).
 ```bash
 cp .env.example .env        # ajuste se quiser; o .env fica fora do git
 docker compose up -d --wait # Postgres 19 (porta 5432) e Floci/SQS (porta 4566)
-uv run pytest               # testes unitários (não precisam do Docker)
+uv run --env-file .env python scripts/migrate.py  # aplica as migrations pendentes
+uv run pytest                  # testes unitários (não precisam do Docker)
+uv run pytest -m integration   # testes de integração (sobem um Postgres descartável via testcontainers)
 ```
 
 Testes unitários ficam ao lado do módulo que testam (`foo.py` → `foo_test.py`); `tests/` guarda só config compartilhada e o smoke test ([ADR-0012](docs/decisions/0012-testes-ao-lado-do-codigo.md)).

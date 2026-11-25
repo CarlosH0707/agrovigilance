@@ -2,6 +2,7 @@
 
 - **Status:** aceita
 - **Data:** 2026-11-24
+- **Nota:** os testes de integração foram antecipados para a Fase 1 no [ADR-0014](0014-testes-de-integracao-com-testcontainers.md).
 
 ## Contexto
 Precisamos fixar a versão do Python, a ferramenta de dependências e a estratégia de testes antes de escrever código.

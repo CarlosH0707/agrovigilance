@@ -1,0 +1,4 @@
+-- Schemas do ADR-0010.
+CREATE SCHEMA raw;
+CREATE SCHEMA core;
+CREATE SCHEMA read;
