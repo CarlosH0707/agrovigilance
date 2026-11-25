@@ -11,6 +11,8 @@ ALL = [
     "V0001__create_schemas.sql",
     "V0002__create_raw_open_meteo_events.sql",
     "V0003__create_raw_field_events.sql",
+    "V0004__create_core_weather_forecasts.sql",
+    "V0005__create_core_field_operations.sql",
 ]
 
 
@@ -27,7 +29,12 @@ def test_applies_everything_once(db):
             )
         }
     assert {"raw", "core", "read"} <= schemas
-    assert {"raw.open_meteo_events", "raw.field_events"} <= tables
+    assert {
+        "raw.open_meteo_events",
+        "raw.field_events",
+        "core.weather_forecasts",
+        "core.field_operations",
+    } <= tables
 
 
 @pytest.mark.parametrize("table", ["raw.open_meteo_events", "raw.field_events"])
