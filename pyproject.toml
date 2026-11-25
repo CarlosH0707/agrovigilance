@@ -6,7 +6,9 @@ authors = [
     { name = "Carlos", email = "87379648+CarlosH0707@users.noreply.github.com" }
 ]
 requires-python = ">=3.14,<3.15"
-dependencies = []
+dependencies = [
+    "psycopg[binary]>=3.3.9",
+]
 
 [build-system]
 requires = ["uv_build>=0.13.10,<0.14.0"]
@@ -17,11 +19,14 @@ build-backend = "uv_build"
 wheel-exclude = ["*_test.py"]
 
 [tool.pytest.ini_options]
-testpaths = ["src", "tests"]
+testpaths = ["src", "scripts", "tests"]
+pythonpath = ["."]
 python_files = ["*_test.py", "test_*.py"]
-addopts = "--import-mode=importlib"
+addopts = "--import-mode=importlib -m 'not integration'"
+markers = ["integration: precisa de Docker (testcontainers); rode com -m integration"]
 
 [dependency-groups]
 dev = [
     "pytest>=9.2.0",
+    "testcontainers[postgres]>=4.15.0",
 ]
