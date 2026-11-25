@@ -1,11 +1,15 @@
-"""Postgres descartável para testes de integração (ADR-0014)."""
+"""Postgres e Floci descartáveis para testes de integração (ADR-0014, ADR-0015)."""
 
+import time
 import uuid
 
+import boto3
 import psycopg
 import pytest
+from botocore.exceptions import BotoCoreError, ClientError
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
 from testcontainers.community.postgres import PostgresContainer
+from testcontainers.core.container import DockerContainer
 
 
 @pytest.fixture(scope="session")
@@ -24,3 +28,32 @@ def db(pg_server):
     yield make_conninfo(**{**conninfo_to_dict(pg_server), "dbname": name})
     with psycopg.connect(pg_server, autocommit=True) as admin:
         admin.execute(f'DROP DATABASE "{name}" WITH (FORCE)')
+
+
+FAKE_AWS = {"region_name": "sa-east-1", "aws_access_key_id": "test", "aws_secret_access_key": "test"}
+
+
+@pytest.fixture(scope="session")
+def floci_url():
+    """Sobe um Floci descartável por execução (ADR-0015)."""
+    with DockerContainer("floci/floci:2.5.0").with_exposed_ports(4566) as container:
+        url = f"http://{container.get_container_host_ip()}:{container.get_exposed_port(4566)}"
+        _wait_until_up(boto3.client("sqs", endpoint_url=url, **FAKE_AWS))
+        yield url
+
+
+@pytest.fixture
+def sqs(floci_url):
+    return boto3.client("sqs", endpoint_url=floci_url, **FAKE_AWS)
+
+
+def _wait_until_up(client, timeout=30.0):
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            client.list_queues()
+            return
+        except (BotoCoreError, ClientError):
+            if time.monotonic() > deadline:
+                raise
+            time.sleep(0.5)
