@@ -14,7 +14,13 @@ DEFAULT_URL = "https://api.open-meteo.com/v1/forecast"
 HOURLY = ("temperature_2m", "relative_humidity_2m", "precipitation_probability", "wind_speed_10m")
 
 
-def fetch_forecast(latitude: float, longitude: float, forecast_days: int = 2) -> dict[str, Any]:
+# 7 dias (ADR-0025): sugestão de horário só até 72 h; o resto serve de tendência.
+FORECAST_DAYS = 7
+
+
+def fetch_forecast(
+    latitude: float, longitude: float, forecast_days: int = FORECAST_DAYS
+) -> dict[str, Any]:
     query = urlencode(
         {
             "latitude": latitude,
