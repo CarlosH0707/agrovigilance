@@ -61,7 +61,7 @@ entrypoints/     API FastAPI (api.py), poller.py (uma coleta da Open-Meteo), wor
 
 `POST /webhooks/field` ([ADR-0016](docs/decisions/0016-fastapi-para-a-api-http.md)) exige `tenant_id`, `field_id`, `type` (texto livre na Fase 1) e `occurred_at` com fuso; `source_event_id` é opcional e campos extras são guardados no payload. Responde **202** (novo, com `event_id`), **200** (`duplicate`) ou **422** (inválido).
 
-O poller da Open-Meteo ([ADR-0018](docs/decisions/0018-ingestao-open-meteo-por-hora.md)) busca 48h de previsão horária do talhão fixo do `.env` e grava uma linha por hora prevista: `uv run --env-file .env python -m agrovigilance.entrypoints.poller`.
+O poller da Open-Meteo ([ADR-0018](docs/decisions/0018-ingestao-open-meteo-por-hora.md)) busca 7 dias de previsão horária ([ADR-0025](docs/decisions/0025-previsao-de-7-dias.md)) do talhão fixo do `.env` e grava uma linha por hora prevista: `uv run --env-file .env python -m agrovigilance.entrypoints.poller`.
 
 Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR-0003](docs/decisions/0003-sqs-standard-com-dlq.md), [ADR-0004](docs/decisions/0004-publicar-apos-commit-sem-outbox.md), [ADR-0010](docs/decisions/0010-schemas-do-banco.md).
 
@@ -132,7 +132,14 @@ Uma linha por `(tenant_id, field_id)` com o último estado consolidado ([ADR-002
 
 ## Domínio: regras do MVP
 
-- **Janela de pulverização:** variáveis `temperature_2m`, `relative_humidity_2m`, `precipitation_probability`, `wind_speed_10m`. Limites exatos a definir com quem é do campo e registrar em ADR.
+- **Janela de pulverização** ([ADR-0024](docs/decisions/0024-regras-da-janela-de-pulverizacao.md)): `domain/spraying_profile.py` guarda os limites por cultura (perfil base) e ajustes por contexto (região, produtor, equipamento, classe de produto, marca, produto), cada limite com motivo e fonte. `domain/spraying_window.py` avalia a sessão agendada (2 h + 6 h sem chuva depois, ou o que a bula do produto pedir; vento convertido para 2 m pela FAO-56) e devolve o nível:
+
+  | Nível | Quando |
+  |---|---|
+  | `ok` | tudo dentro do ideal |
+  | `attention` | algum valor só na faixa tolerável |
+  | `postpone` | bloqueado, com janela boa nas próximas 72 h (sugere o início, sempre entre 6h e 18h locais) |
+  | `no_window` | bloqueado, sem janela boa nas próximas 72 h |
 - **Risco de colheita/tráfego:** chuva acumulada e umidade. Limites a definir.
 
 ## Fora do escopo por enquanto

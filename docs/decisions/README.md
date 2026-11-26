@@ -24,6 +24,13 @@ Status possíveis: `proposta` · `aceita` · `substituída por ADR-NNNN` · `des
 | [0016](0016-fastapi-para-a-api-http.md) | FastAPI + uvicorn para a API HTTP | aceita |
 | [0017](0017-camadas-dentro-do-pacote.md) | Código organizado em camadas dentro do pacote | aceita |
 | [0018](0018-ingestao-open-meteo-por-hora.md) | Ingestão da Open-Meteo: uma linha por hora prevista e por coleta | aceita |
+| [0019](0019-canonical-payload-por-tipo.md) | Canonical payload: uma tabela por tipo de evento em `core` | aceita |
+| [0020](0020-llm-na-entrada-e-nao-no-alerta.md) | LLM na entrada em texto livre, não na redação do alerta | aceita |
+| [0021](0021-worker-em-loop-com-long-polling.md) | Worker em loop com long polling | aceita |
+| [0022](0022-field-snapshot-recalculado-por-talhao.md) | `read.field_snapshot` recalculado por talhão a partir de `core` | aceita |
+| [0023](0023-redrive-nativo-da-dlq.md) | Redrive da DLQ com o recurso nativo do SQS | aceita |
+| [0024](0024-regras-da-janela-de-pulverizacao.md) | Regras da janela de pulverização: perfis por cultura com ajustes e níveis de alerta | aceita |
+| [0025](0025-previsao-de-7-dias.md) | Previsão de 7 dias, sugestão de horário só até 72 h | aceita |
 
 ## Template
 

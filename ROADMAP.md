@@ -39,7 +39,7 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 
 **Pronto quando:** a regra de janela de pulverização gera um alerta no console, sem repetir o mesmo alerta dentro da janela de anti-spam.
 
-- [ ] Regras determinísticas da janela de pulverização (limites em ADR)
+- [x] Regras determinísticas da janela de pulverização (ADR-0024) e previsão de 7 dias (ADR-0025)
 - [ ] Anti-spam / deduplicação de alertas
 - [ ] `ConsoleChannel`
 - [ ] Texto do alerta por template, sem LLM (ADR-0020)
