@@ -31,6 +31,7 @@ Status possíveis: `proposta` · `aceita` · `substituída por ADR-NNNN` · `des
 | [0023](0023-redrive-nativo-da-dlq.md) | Redrive da DLQ com o recurso nativo do SQS | aceita |
 | [0024](0024-regras-da-janela-de-pulverizacao.md) | Regras da janela de pulverização: perfis por cultura com ajustes e níveis de alerta | aceita |
 | [0025](0025-previsao-de-7-dias.md) | Previsão de 7 dias, sugestão de horário só até 72 h | aceita |
+| [0026](0026-cadastro-de-produtores-e-talhoes.md) | Cadastro de produtores, contatos, propriedades e talhões no banco | aceita |
 
 ## Template
 

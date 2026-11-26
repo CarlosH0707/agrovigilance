@@ -1,6 +1,6 @@
 # 0018. Ingestão da Open-Meteo: uma linha por hora prevista e por coleta
 
-- **Status:** aceita (`forecast_days` substituído pelo [ADR-0025](0025-previsao-de-7-dias.md))
+- **Status:** aceita (`forecast_days` substituído pelo [ADR-0025](0025-previsao-de-7-dias.md); talhão fixo do `.env` substituído pelo [ADR-0026](0026-cadastro-de-produtores-e-talhoes.md))
 - **Data:** 2026-11-25
 
 ## Contexto

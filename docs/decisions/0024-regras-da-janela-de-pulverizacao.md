@@ -1,6 +1,6 @@
 # 0024. Regras da janela de pulverização: perfis por cultura com ajustes e níveis de alerta
 
-- **Status:** aceita
+- **Status:** aceita (`FIELD_TIMEZONE` e ajuste do produtor passam ao cadastro do [ADR-0026](0026-cadastro-de-produtores-e-talhoes.md))
 - **Data:** 2026-11-26
 
 ## Contexto

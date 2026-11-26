@@ -1,7 +1,9 @@
 import uuid
 from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
-from agrovigilance.application.ingest_weather import ingest
+from agrovigilance.application.ingest_weather import collect, ingest
+from agrovigilance.domain.field import Field
 from agrovigilance.domain.weather_reading import WeatherReading
 
 FETCHED = datetime(2026, 11, 25, 12, 0, tzinfo=UTC)
@@ -61,3 +63,48 @@ def test_next_fetch_hour_is_a_new_version():
 
     assert len(ingest(readings(fetched_at=FETCHED + timedelta(hours=1)), store, publisher)) == 3
     assert len(publisher.messages) == 6
+
+
+def field(field_id, producer_id="p1"):
+    return Field(
+        producer_id=producer_id,
+        field_id=field_id,
+        name=field_id,
+        crop="cafe",
+        area_ha=None,
+        latitude=-19.0,
+        longitude=-40.0,
+        region="ES",
+        timezone=ZoneInfo("America/Sao_Paulo"),
+        temperature_tolerable_max_c=None,
+    )
+
+
+def test_collect_reads_each_field_with_its_own_ids():
+    store, publisher = FakeStore(), FakePublisher()
+
+    def source(f, fetched_at):
+        start = datetime(2026, 11, 25, 12, 0, tzinfo=UTC)
+        return [WeatherReading(f.producer_id, f.field_id, start, fetched_at, {})]
+
+    results = collect([field("a"), field("b", "p2")], source, store, publisher, FETCHED)
+
+    assert {k: len(v) for k, v in results.items()} == {("p1", "a"): 1, ("p2", "b"): 1}
+    assert {(m["tenant_id"], m["field_id"]) for m in publisher.messages} == {
+        ("p1", "a"),
+        ("p2", "b"),
+    }
+
+
+def test_collect_keeps_going_when_one_field_fails():
+    store, publisher = FakeStore(), FakePublisher()
+
+    def source(f, fetched_at):
+        if f.field_id == "a":
+            raise TimeoutError("Open-Meteo fora")
+        return readings(fetched_at)
+
+    results = collect([field("a"), field("b")], source, store, publisher, FETCHED)
+
+    assert isinstance(results[("p1", "a")], TimeoutError)
+    assert len(results[("p1", "b")]) == 3

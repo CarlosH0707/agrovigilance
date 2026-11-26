@@ -61,7 +61,7 @@ entrypoints/     API FastAPI (api.py), poller.py (uma coleta da Open-Meteo), wor
 
 `POST /webhooks/field` ([ADR-0016](docs/decisions/0016-fastapi-para-a-api-http.md)) exige `tenant_id`, `field_id`, `type` (texto livre na Fase 1) e `occurred_at` com fuso; `source_event_id` é opcional e campos extras são guardados no payload. Responde **202** (novo, com `event_id`), **200** (`duplicate`) ou **422** (inválido).
 
-O poller da Open-Meteo ([ADR-0018](docs/decisions/0018-ingestao-open-meteo-por-hora.md)) busca 7 dias de previsão horária ([ADR-0025](docs/decisions/0025-previsao-de-7-dias.md)) do talhão fixo do `.env` e grava uma linha por hora prevista: `uv run --env-file .env python -m agrovigilance.entrypoints.poller`.
+O poller da Open-Meteo ([ADR-0018](docs/decisions/0018-ingestao-open-meteo-por-hora.md)) busca 7 dias de previsão horária ([ADR-0025](docs/decisions/0025-previsao-de-7-dias.md)) de cada talhão cadastrado em `core.fields` ([ADR-0026](docs/decisions/0026-cadastro-de-produtores-e-talhoes.md)) e grava uma linha por hora prevista; a falha de um talhão não para os outros: `uv run --env-file .env python -m agrovigilance.entrypoints.poller`.
 
 Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR-0003](docs/decisions/0003-sqs-standard-com-dlq.md), [ADR-0004](docs/decisions/0004-publicar-apos-commit-sem-outbox.md), [ADR-0010](docs/decisions/0010-schemas-do-banco.md).
 
@@ -118,6 +118,16 @@ Formato interno por tipo de evento, com colunas tipadas ([ADR-0019](docs/decisio
 - Cada linha tem `raw_event_id` (UNIQUE + FK para o raw de origem), o que faz o reprocessamento da mesma mensagem não duplicar nada.
 - `core.weather_forecasts`: `target_hour`, `fetched_at` (= `raw.ingested_at`), `temperature_c`, `relative_humidity_pct`, `precipitation_probability_pct`, `wind_speed_kmh` (podem ser nulos). Unidade inesperada no payload é erro.
 - `core.field_operations`: `type` na lista fechada (`pulverizacao_agendada`, `pulverizacao_concluida`), `occurred_at` e `scheduled_for` (obrigatório no agendamento). O que não cabe vira `rejected` no raw, sem ir para a DLQ.
+
+### Cadastro (Fase 3, [ADR-0026](docs/decisions/0026-cadastro-de-produtores-e-talhoes.md))
+
+```
+producers (id = tenant_id) ─┬─ producer_contacts (phone UNIQUE, E.164)
+                            ├─ producer_crops    (crop, temperature_tolerable_max_c)
+                            └─ farms (region, timezone) ── fields (field_id, crop, area_ha, lat/lon)
+```
+
+Sem API: as linhas entram à mão, com SQL fora do git. O `tenant_id` das outras tabelas é o UUID do produtor.
 
 ### `read.field_snapshot` (Fase 2)
 
