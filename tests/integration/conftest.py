@@ -11,6 +11,8 @@ from psycopg.conninfo import conninfo_to_dict, make_conninfo
 from testcontainers.community.postgres import PostgresContainer
 from testcontainers.core.container import DockerContainer
 
+from scripts.migrate import migrate
+
 
 @pytest.fixture(scope="session")
 def pg_server():
@@ -61,3 +63,24 @@ def _wait_until_up(client, timeout=30.0):
             if time.monotonic() > deadline:
                 raise
             time.sleep(0.5)
+
+
+@pytest.fixture
+def tenant(db):
+    """Banco migrado com produtor, propriedade e talhão `f1` (ADR-0026); devolve o tenant_id."""
+    migrate(db)
+    with psycopg.connect(db, autocommit=True) as conn:
+        producer_id = conn.execute(
+            "INSERT INTO core.producers (name) VALUES ('Teste') RETURNING id"
+        ).fetchone()[0]
+        farm_id = conn.execute(
+            "INSERT INTO core.farms (producer_id, name, region, timezone)"
+            " VALUES (%s, 'Sede', 'ES', 'America/Sao_Paulo') RETURNING id",
+            (producer_id,),
+        ).fetchone()[0]
+        conn.execute(
+            "INSERT INTO core.fields (producer_id, field_id, farm_id, name, crop, latitude, longitude)"
+            " VALUES (%s, %s, %s, 'Café', 'cafe', -19.0, -40.0)",
+            (producer_id, "f1", farm_id),
+        )
+    return str(producer_id)

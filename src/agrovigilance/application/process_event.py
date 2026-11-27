@@ -32,6 +32,11 @@ class CanonicalStore[T](Protocol):
         """Grava uma vez por `raw_event_id`; repetir não faz nada."""
 
 
+class Fields(Protocol):
+    def exists(self, tenant_id: str, field_id: str) -> bool:
+        """O talhão está cadastrado para esse produtor (ADR-0026)."""
+
+
 class Snapshot(Protocol):
     def refresh(self, tenant_id: str, field_id: str) -> None:
         """Recalcula o read model do talhão a partir de core; repetir dá o mesmo resultado."""
@@ -75,8 +80,13 @@ def process_field_operation(
     raw: RawEvents,
     core: CanonicalStore[field_operation.FieldOperation],
     snapshot: Snapshot,
+    fields: Fields,
 ) -> str:
     row = _load(raw, event_id)
+    if not fields.exists(row.tenant_id, row.field_id):
+        # Talhão que não existe não passa a existir tentando de novo (ADR-0027).
+        raw.set_status(event_id, "rejected")
+        return "rejected"
     try:
         op = field_operation.from_raw(
             row.id, row.tenant_id, row.field_id, row.occurred_at, row.payload

@@ -13,21 +13,19 @@ from agrovigilance.infrastructure.database.raw.field_events.repository import Fi
 from agrovigilance.infrastructure.queues.events.consumer import EventsConsumer
 from agrovigilance.infrastructure.queues.events.publisher import EventsPublisher
 from scripts.create_queues import MAX_RECEIVE_COUNT, ensure_queues
-from scripts.migrate import migrate
 from scripts.redrive_dlq import redrive
 
 pytestmark = pytest.mark.integration
 
 
-def test_failed_message_goes_to_dlq_and_redrive_brings_it_back(db, sqs):
+def test_failed_message_goes_to_dlq_and_redrive_brings_it_back(db, sqs, tenant):
     suffix = uuid.uuid4().hex[:8]
     queue, dlq = f"events-{suffix}", f"events-{suffix}-dlq"
     queue_url = ensure_queues(sqs, queue, dlq)
     # Visibilidade zero: a mensagem que falhou volta na hora, sem esperar 30 s.
     sqs.set_queue_attributes(QueueUrl=queue_url, Attributes={"VisibilityTimeout": "0"})
-    migrate(db)
     body = {
-        "tenant_id": "t1",
+        "tenant_id": tenant,
         "field_id": "f1",
         "type": "pulverizacao_concluida",
         "occurred_at": "2026-11-25T10:00:00-03:00",

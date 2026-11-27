@@ -18,7 +18,6 @@ from agrovigilance.infrastructure.database.raw.open_meteo_events.repository impo
 from agrovigilance.infrastructure.queues.events.consumer import EventsConsumer
 from agrovigilance.infrastructure.queues.events.publisher import EventsPublisher
 from scripts.create_queues import ensure_queues
-from scripts.migrate import migrate
 
 pytestmark = pytest.mark.integration
 
@@ -40,8 +39,8 @@ WEATHER = {
 }
 
 
-def field_event(type_, **extra):
-    body = {"tenant_id": "t1", "field_id": "f1", "type": type_, **extra}
+def field_event(tenant_id, type_, field_id="f1", **extra):
+    body = {"tenant_id": tenant_id, "field_id": field_id, "type": type_, **extra}
     body["occurred_at"] = "2026-11-25T10:00:00-03:00"
     body["source_event_id"] = uuid.uuid4().hex
     return FieldEvent.model_validate(body), body
@@ -53,14 +52,13 @@ def queue_url(sqs):
     return ensure_queues(sqs, f"events-{suffix}", f"events-{suffix}-dlq")
 
 
-def test_worker_fills_core_and_marks_raw(db, sqs, queue_url):
-    migrate(db)
+def test_worker_fills_core_and_marks_raw(db, sqs, queue_url, tenant):
     publisher = EventsPublisher(sqs, queue_url)
     with psycopg.connect(db, autocommit=True) as conn:
         [weather_id] = ingest_weather.ingest(
             [
                 WeatherReading(
-                    "t1",
+                    tenant,
                     "f1",
                     datetime(2026, 11, 26, 15, tzinfo=UTC),
                     datetime.now(UTC),
@@ -71,28 +69,40 @@ def test_worker_fills_core_and_marks_raw(db, sqs, queue_url):
             publisher,
         )
         scheduled_id = ingest_field_event.ingest(
-            *field_event("pulverizacao_agendada", scheduled_for="2026-11-26T07:00:00-03:00"),
+            *field_event(
+                tenant,
+                "pulverizacao_agendada",
+                scheduled_for="2026-11-26T07:00:00-03:00",
+                product="Opera",
+                equipment="trator",
+            ),
             FieldEventRepository(conn),
             publisher,
         )
         rejected_id = ingest_field_event.ingest(
-            *field_event("colheita"), FieldEventRepository(conn), publisher
+            *field_event(tenant, "colheita"), FieldEventRepository(conn), publisher
+        )
+        unknown_field_id = ingest_field_event.ingest(
+            *field_event(tenant, "pulverizacao_concluida", field_id="nao-cadastrado"),
+            FieldEventRepository(conn),
+            publisher,
         )
     # A SQS Standard pode entregar duas vezes: simula a reentrega do agendamento.
     publisher.publish({"source": "field_events", "event_id": str(scheduled_id)})
 
     consumer = EventsConsumer(sqs, queue_url, wait_seconds=1)
     done = 0
-    for _ in range(5):  # o Floci pode devolver as 4 mensagens em mais de um receive
+    for _ in range(6):  # o Floci pode devolver as 5 mensagens em mais de um receive
         done += process_once(consumer, db)
-    assert done == 4
+    assert done == 5
 
     with psycopg.connect(db) as conn:
         forecast = conn.execute(
             "SELECT raw_event_id, wind_speed_kmh FROM core.weather_forecasts"
         ).fetchall()
         operations = conn.execute(
-            "SELECT raw_event_id, type, scheduled_for FROM core.field_operations"
+            "SELECT raw_event_id, type, scheduled_for, product, product_class, equipment"
+            " FROM core.field_operations"
         ).fetchall()
         statuses = dict(
             conn.execute(
@@ -106,13 +116,21 @@ def test_worker_fills_core_and_marks_raw(db, sqs, queue_url):
 
     assert forecast == [(weather_id, 7.2)]
     assert operations == [
-        (scheduled_id, "pulverizacao_agendada", datetime(2026, 11, 26, 10, tzinfo=UTC))
+        (
+            scheduled_id,
+            "pulverizacao_agendada",
+            datetime(2026, 11, 26, 10, tzinfo=UTC),
+            "opera",
+            "fungicida",
+            "trator",
+        )
     ]
     assert statuses == {
         weather_id: "processed",
         scheduled_id: "processed",
         rejected_id: "rejected",
+        unknown_field_id: "rejected",
     }
-    assert snapshot == [("t1", "f1", datetime(2026, 11, 26, 10, tzinfo=UTC))]
+    assert snapshot == [(tenant, "f1", datetime(2026, 11, 26, 10, tzinfo=UTC))]
     leftover = sqs.receive_message(QueueUrl=queue_url, WaitTimeSeconds=1).get("Messages", [])
     assert [json.loads(m["Body"]) for m in leftover] == []
