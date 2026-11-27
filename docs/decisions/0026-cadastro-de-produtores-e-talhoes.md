@@ -39,7 +39,7 @@ Migration `V0007`, tudo em `core`, sem API de cadastro. As linhas entram à mão
 - Homônimos não se misturam, e um produtor novo é um `INSERT`, não um deploy.
 - Vários talhões funcionam sem mudança de código. Talhões na mesma propriedade fazem chamadas quase iguais à Open-Meteo; dá para agrupar por coordenada quando o número crescer.
 - A coordenada real sai do `.env` e fica só no banco local. Nada pessoal (nome, celular, coordenada) vai para o git.
-- **Ainda não há FK de `tenant_id`/`field_id` para o cadastro** nas tabelas de eventos. O `raw` guarda o que chegou, como manda o ADR-0002, e o webhook ainda aceita talhão não cadastrado. Validar o talhão no worker (evento de talhão desconhecido → `rejected`) entra junto com o agendamento com produto.
+- **Ainda não há FK de `tenant_id`/`field_id` para o cadastro** nas tabelas de eventos. O `raw` guarda o que chegou, como manda o ADR-0002, e o webhook ainda aceita talhão não cadastrado. O worker passou a recusar (`rejected`) evento de talhão desconhecido no [ADR-0027](0027-produto-e-equipamento-no-agendamento.md).
 - Sem API, o cadastro é trabalho manual. Serve para um produtor; com mais, vira uma tela ou um fluxo no WhatsApp.
 
 ## Alternativas consideradas

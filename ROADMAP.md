@@ -41,7 +41,7 @@ Ritmo: **45–60 min por semana** (quartas). Cada item cabe em uma sessão. Uma 
 
 - [x] Regras determinísticas da janela de pulverização (ADR-0024) e previsão de 7 dias (ADR-0025)
 - [x] Cadastro de produtores, contatos, propriedades e talhões; poller lê os talhões do banco (ADR-0026)
-- [ ] Produto e equipamento no agendamento, com catálogo de produtos
+- [x] Produto e equipamento no agendamento, com catálogo de produtos; talhão não cadastrado é recusado (ADR-0027)
 - [ ] Anti-spam / deduplicação de alertas
 - [ ] `ConsoleChannel`
 - [ ] Texto do alerta por template, sem LLM (ADR-0020)
