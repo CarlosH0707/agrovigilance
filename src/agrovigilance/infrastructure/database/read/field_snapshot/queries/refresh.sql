@@ -20,7 +20,7 @@ last_operation AS (
 ),
 open_schedule AS (
     -- O último agendamento vale até aparecer uma conclusão apontada depois dele.
-    SELECT s.scheduled_for
+    SELECT s.scheduled_for, s.product, s.product_class, s.equipment
     FROM core.field_operations s
     WHERE s.tenant_id = %(tenant_id)s
       AND s.field_id = %(field_id)s
@@ -38,6 +38,7 @@ open_schedule AS (
 )
 INSERT INTO read.field_snapshot (
     tenant_id, field_id, forecast, scheduled_spraying_for,
+    scheduled_product, scheduled_product_class, scheduled_equipment,
     last_operation_type, last_operation_at, updated_at
 )
 SELECT
@@ -45,12 +46,18 @@ SELECT
     %(field_id)s,
     (SELECT coalesce(jsonb_agg(to_jsonb(f) ORDER BY f.target_hour), '[]') FROM latest_forecast f),
     (SELECT scheduled_for FROM open_schedule),
+    (SELECT product FROM open_schedule),
+    (SELECT product_class FROM open_schedule),
+    (SELECT equipment FROM open_schedule),
     (SELECT type FROM last_operation),
     (SELECT occurred_at FROM last_operation),
     now()
 ON CONFLICT (tenant_id, field_id) DO UPDATE SET
     forecast = EXCLUDED.forecast,
     scheduled_spraying_for = EXCLUDED.scheduled_spraying_for,
+    scheduled_product = EXCLUDED.scheduled_product,
+    scheduled_product_class = EXCLUDED.scheduled_product_class,
+    scheduled_equipment = EXCLUDED.scheduled_equipment,
     last_operation_type = EXCLUDED.last_operation_type,
     last_operation_at = EXCLUDED.last_operation_at,
     updated_at = EXCLUDED.updated_at

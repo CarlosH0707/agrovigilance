@@ -15,6 +15,7 @@ ALL = [
     "V0005__create_core_field_operations.sql",
     "V0006__create_read_field_snapshot.sql",
     "V0007__create_core_cadastro.sql",
+    "V0008__add_product_and_equipment_to_operations.sql",
 ]
 
 

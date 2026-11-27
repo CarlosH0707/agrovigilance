@@ -102,3 +102,34 @@ def test_completion_before_the_schedule_does_not_close_it(conn):
 
 def test_field_without_data_gets_an_empty_row(conn):
     assert refresh(conn) == ([], None, None, None)
+
+
+def test_open_schedule_carries_its_product_and_equipment(conn):
+    def schedule(occurred_at, product, product_class, equipment):
+        conn.execute(
+            "INSERT INTO core.field_operations (raw_event_id, tenant_id, field_id, type,"
+            " occurred_at, scheduled_for, product, product_class, equipment)"
+            " VALUES (%s, 't1', 'f1', 'pulverizacao_agendada', %s, %s, %s, %s, %s)",
+            (
+                raw_id(conn, "field_events"),
+                occurred_at,
+                NEXT_HOUR,
+                product,
+                product_class,
+                equipment,
+            ),
+        )
+
+    def scheduled():
+        FieldSnapshotRepository(conn).refresh("t1", "f1")
+        return conn.execute(
+            "SELECT scheduled_product, scheduled_product_class, scheduled_equipment"
+            " FROM read.field_snapshot WHERE tenant_id = 't1' AND field_id = 'f1'"
+        ).fetchone()
+
+    schedule(NOW - timedelta(hours=2), "opera", "fungicida", "trator")
+    schedule(NOW - timedelta(hours=1), "Clopam", None, None)  # o último agendamento vale
+    assert scheduled() == ("Clopam", None, None)
+
+    add_operation(conn, "pulverizacao_concluida", NOW)
+    assert scheduled() == (None, None, None)
