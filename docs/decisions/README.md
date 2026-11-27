@@ -32,6 +32,7 @@ Status possíveis: `proposta` · `aceita` · `substituída por ADR-NNNN` · `des
 | [0024](0024-regras-da-janela-de-pulverizacao.md) | Regras da janela de pulverização: perfis por cultura com ajustes e níveis de alerta | aceita |
 | [0025](0025-previsao-de-7-dias.md) | Previsão de 7 dias, sugestão de horário só até 72 h | aceita |
 | [0026](0026-cadastro-de-produtores-e-talhoes.md) | Cadastro de produtores, contatos, propriedades e talhões no banco | aceita |
+| [0027](0027-produto-e-equipamento-no-agendamento.md) | Produto e equipamento no agendamento, com catálogo de produtos | aceita |
 
 ## Template
 

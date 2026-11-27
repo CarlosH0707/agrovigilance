@@ -22,6 +22,7 @@ from agrovigilance.infrastructure.database.connection import conninfo_from_env
 from agrovigilance.infrastructure.database.core.field_operations.repository import (
     FieldOperationRepository,
 )
+from agrovigilance.infrastructure.database.core.fields.repository import FieldRepository
 from agrovigilance.infrastructure.database.core.weather_forecasts.repository import (
     WeatherForecastRepository,
 )
@@ -52,6 +53,7 @@ def handlers_for(conn: psycopg.Connection) -> dict[str, Handler]:
             raw=FieldEventRepository(conn),
             core=FieldOperationRepository(conn),
             snapshot=snapshot,
+            fields=FieldRepository(conn),
         ),
     }
 

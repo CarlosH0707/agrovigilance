@@ -62,6 +62,14 @@ class FakeSnapshot:
         self.refreshed.append((tenant_id, field_id))
 
 
+class FakeFields:
+    def __init__(self, *registered):
+        self.registered = set(registered) or {("t1", "f1")}
+
+    def exists(self, tenant_id, field_id):
+        return (tenant_id, field_id) in self.registered
+
+
 def only_id(raw):
     [event_id] = raw.rows
     return event_id
@@ -82,8 +90,8 @@ def test_processing_twice_keeps_one_canonical_row():
     raw, core, snapshot = FakeRaw({"type": "pulverizacao_concluida"}), FakeCore(), FakeSnapshot()
     event_id = only_id(raw)
 
-    process_field_operation(event_id, raw, core, snapshot)
-    process_field_operation(event_id, raw, core, snapshot)
+    process_field_operation(event_id, raw, core, snapshot, FakeFields())
+    process_field_operation(event_id, raw, core, snapshot, FakeFields())
     assert list(core.items) == [event_id]
     assert snapshot.refreshed == [("t1", "f1")] * 2  # recalcular de novo é inofensivo
     assert raw.status == {event_id: "processed"}
@@ -93,7 +101,7 @@ def test_invalid_operation_is_rejected_without_error():
     raw, core, snapshot = FakeRaw({"type": "colheita"}), FakeCore(), FakeSnapshot()
     event_id = only_id(raw)
 
-    assert process_field_operation(event_id, raw, core, snapshot) == "rejected"
+    assert process_field_operation(event_id, raw, core, snapshot, FakeFields()) == "rejected"
     assert core.items == {}
     assert snapshot.refreshed == []
     assert raw.status == {event_id: "rejected"}
@@ -135,3 +143,15 @@ def test_handle_routes_by_source():
 def test_handle_refuses_malformed_message(body):
     with pytest.raises(ValidationError):
         handle(body, {"field_events": lambda i: "processed"})
+
+
+def test_operation_for_an_unregistered_field_is_rejected():
+    raw, core, snapshot = FakeRaw({"type": "pulverizacao_concluida"}), FakeCore(), FakeSnapshot()
+    event_id = only_id(raw)
+
+    status = process_field_operation(event_id, raw, core, snapshot, FakeFields(("t1", "outro")))
+
+    assert status == "rejected"
+    assert raw.status[event_id] == "rejected"
+    assert core.items == {}
+    assert snapshot.refreshed == []

@@ -1,6 +1,6 @@
 # 0019. Canonical payload: uma tabela por tipo de evento em `core`
 
-- **Status:** aceita
+- **Status:** aceita (apontamento ampliado com produto e equipamento pelo [ADR-0027](0027-produto-e-equipamento-no-agendamento.md))
 - **Data:** 2026-11-25
 
 ## Contexto

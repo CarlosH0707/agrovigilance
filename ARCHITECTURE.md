@@ -77,7 +77,7 @@ Por que assim: [ADR-0002](docs/decisions/0002-idempotencia-na-ingestao.md), [ADR
 O worker ([ADR-0021](docs/decisions/0021-worker-em-loop-com-long-polling.md)) roda em loop: `uv run --env-file .env python -m agrovigilance.entrypoints.worker`.
 
 1. Long polling na fila (até 10 mensagens, espera de até 20 s).
-2. Valida a mensagem (`source` + `event_id`) e lê a linha do raw.
+2. Valida a mensagem (`source` + `event_id`) e lê a linha do raw. Apontamento de talhão não cadastrado em `core.fields` vira `rejected` ([ADR-0027](docs/decisions/0027-produto-e-equipamento-no-agendamento.md)).
 3. Converte para o formato canônico e grava em `core` com `ON CONFLICT (raw_event_id) DO NOTHING`.
 4. Recalcula a linha do talhão em `read.field_snapshot` a partir de `core` ([ADR-0022](docs/decisions/0022-field-snapshot-recalculado-por-talhao.md)).
 5. Marca o raw como `processed` (ou `rejected`, se o apontamento for inválido) e **só então** apaga a mensagem.
@@ -117,7 +117,7 @@ Formato interno por tipo de evento, com colunas tipadas ([ADR-0019](docs/decisio
 
 - Cada linha tem `raw_event_id` (UNIQUE + FK para o raw de origem), o que faz o reprocessamento da mesma mensagem não duplicar nada.
 - `core.weather_forecasts`: `target_hour`, `fetched_at` (= `raw.ingested_at`), `temperature_c`, `relative_humidity_pct`, `precipitation_probability_pct`, `wind_speed_kmh` (podem ser nulos). Unidade inesperada no payload é erro.
-- `core.field_operations`: `type` na lista fechada (`pulverizacao_agendada`, `pulverizacao_concluida`), `occurred_at` e `scheduled_for` (obrigatório no agendamento). O que não cabe vira `rejected` no raw, sem ir para a DLQ.
+- `core.field_operations`: `type` na lista fechada (`pulverizacao_agendada`, `pulverizacao_concluida`), `occurred_at` e `scheduled_for` (obrigatório no agendamento), mais `product` (id do catálogo de `domain/products.py` ou o texto como veio), `product_class` e `equipment` (listas fechadas, opcionais; equipamento nunca é assumido) ([ADR-0027](docs/decisions/0027-produto-e-equipamento-no-agendamento.md)). O que não cabe vira `rejected` no raw, sem ir para a DLQ.
 
 ### Cadastro (Fase 3, [ADR-0026](docs/decisions/0026-cadastro-de-produtores-e-talhoes.md))
 
@@ -137,6 +137,7 @@ Uma linha por `(tenant_id, field_id)` com o último estado consolidado ([ADR-002
 |---|---|---|
 | `forecast` | JSONB | próximas horas, ordenadas; por hora, a coleta de maior `fetched_at` |
 | `scheduled_spraying_for` | timestamptz | último agendamento sem conclusão apontada depois dele |
+| `scheduled_product`, `scheduled_product_class`, `scheduled_equipment` | text | produto, classe e equipamento desse agendamento (vazios se não informados) |
 | `last_operation_type`, `last_operation_at` | text, timestamptz | apontamento mais recente |
 | `updated_at` | timestamptz | último refresh |
 
